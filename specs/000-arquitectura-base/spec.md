@@ -1,0 +1,49 @@
+# Especificación — Arquitectura base de Backend
+
+**ID:** ARCH-BE-BASE  
+**Decisión:** `propuesto` · **Aprobación:** pendiente  
+**Ejecución:** `no_iniciado` · **Verificación:** `no_ejecutada`
+
+## 1. Objetivo
+
+Establecer requisitos arquitectónicos transversales para organizar un futuro componente Backend de Rutitas de forma comprensible, modular, segura, configurable y comprobable. Esta especificación no describe funcionalidades del producto.
+
+## 2. Alcance y exclusiones
+
+Incluye responsabilidades, límites internos, configuración, contratos como concepto, validación, errores, seguridad, persistencia como abstracción, observabilidad, pruebas y mantenibilidad. Excluye casos de uso, endpoints, roles de producto, entidades/tablas de negocio, reglas funcionales, proveedor cloud, lenguaje/framework, base de datos y despliegue concreto.
+
+## 3. Fuentes y restricciones
+
+Fuentes: Constitución propuesta de Rutitas, AGENTS de esta entrega, instrucciones académicas del 29-10-2026, análisis SDD del curso y ejemplos de arquitectura de clase. Los ejemplos tecnológicos no son decisiones de Rutitas. No se ha confirmado un backend funcional aprobado; la propuesta no presupone stack.
+
+## 4. Requisitos arquitectónicos
+
+| ID | Requisito | Criterio documental de aceptación |
+|---|---|---|
+| ARCH-BE-01 | Separación de responsabilidades | Se distinguen adaptadores de entrada, aplicación, dominio e infraestructura; cada uno tiene responsabilidad y dependencias documentadas. |
+| ARCH-BE-02 | Modularidad proporcional | Las capacidades futuras pueden tener límites explícitos; no se requieren microservicios ni módulos de dominio vacíos. |
+| ARCH-BE-03 | Organización mantenible | El plan propone una estructura lógica identificable y reglas para evitar ciclos y acoplamiento a proveedores. |
+| ARCH-BE-04 | Configuración por entorno | Se separan valores de configuración y secretos; no se codifican secretos ni valores de producción en el cliente o repositorio. |
+| ARCH-BE-05 | Contratos entre capas | Toda frontera futura identifica entradas/salidas, validación, errores, permisos, compatibilidad y propietario; no se define una API concreta aquí. |
+| ARCH-BE-06 | Errores y validación | Se propone validación de entrada confiable y una estrategia consistente de errores que no exponga datos internos. |
+| ARCH-BE-07 | Seguridad por diseño | El diseño futuro contempla mínimo privilegio, límites de confianza, autorización en el lado de servicio cuando aplique y gestión segura de secretos. |
+| ARCH-BE-08 | Persistencia como abstracción | Las reglas de aplicación no dependen directamente del motor; las decisiones de consistencia, transacción y migración se especifican cuando haya requisitos. |
+| ARCH-BE-09 | Observabilidad y logging | Se identifican señales operativas útiles, correlación y redacción de información sensible; se documentan propósito y retención. |
+| ARCH-BE-10 | Pruebas previstas | El plan diferencia validaciones unitarias, integración/contrato y seguridad según riesgos; no se reporta ninguna como ejecutada. |
+| ARCH-BE-11 | Mantenibilidad | Decisiones, dependencias, límites y convenciones se documentan con trazabilidad y revisión. |
+
+## 5. Calidad, privacidad y riesgos
+
+La futura arquitectura debe reducir privilegios innecesarios, validar en límites de confianza, evitar secretos en repositorio/logs y limitar datos tratados. Los criterios aplicables dependen del alcance y clasificación futura de datos. Riesgos actuales: decisiones de tecnología/operación aún abiertas, restricciones del equipo no confirmadas y posibles contradicciones al pasar de plantilla a repositorio real.
+
+## 6. Criterios de aceptación de esta especificación
+
+- Define requisitos arquitectónicos generales y comprobables documentalmente.
+- No especifica una funcionalidad, endpoint, entidad ni regla de negocio de Rutitas.
+- No elige lenguaje, framework, base de datos, nube ni herramienta.
+- Se alinea con Constitución y AGENTS; conserva decisiones pendientes.
+- Distingue criterios documentales de validación técnica futura.
+
+## 7. Decisiones pendientes
+
+Repositorio y entorno objetivo; lenguaje/runtime/framework; patrón y límites de módulos; protocolo y contrato; persistencia; autenticación/autorización aplicable; política de secretos; logging/retención; calidad y releases. Ver [decisiones de este proyecto](../../docs/decisiones-pendientes.md).
