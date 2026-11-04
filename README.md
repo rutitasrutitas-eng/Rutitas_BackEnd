@@ -57,4 +57,4 @@ La comunicación con Móvil se mantiene como propuesta en [`docs/integracion-ent
 
 ## Repositorio
 
-Repositorio oficial asignado: [Rutitas_BackEnd](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd). La documentación de este README no implica que la publicación haya sido confirmada.
+Repositorio oficial asignado: [Rutitas_BackEnd](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd). La rama `main` está publicada en GitHub; el HEAD remoto se verificó después del push.
