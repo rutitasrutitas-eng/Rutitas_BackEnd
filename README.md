@@ -58,3 +58,13 @@ La comunicación con Móvil se mantiene como propuesta en [`docs/integracion-ent
 ## Repositorio
 
 Repositorio oficial asignado: [Rutitas_BackEnd](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd). La rama `main` está publicada en GitHub; el HEAD remoto se verificó después del push.
+
+## Propuestas tecnológicas y funcionales para discusión futura (2026-11-04)
+
+El equipo comunicó que el profesor **requiere una base NoSQL** y permite elegir alojamiento entre **Azure, AWS o Google Cloud** (fuentes primarias pendientes de anexar). Se propone evaluar **ASP.NET Core 10/C# + Google Cloud Run + Firestore**, con Google Maps Platform y posible Firebase Authentication. Son **opciones candidatas, no un stack aprobado**.
+
+- [Propuesta de stack Backend y cloud](docs/propuestas-futuras/stack-backend-y-cloud.md).
+- [Inventario exploratorio de 7 endpoints (dos alternativas según autenticación)](docs/propuestas-futuras/inventario-7-endpoints.md).
+- [Decisiones aún abiertas](docs/decisiones-pendientes.md).
+
+**Separación de fases:** estos anexos no forman parte de `specs/000-arquitectura-base/`, no son especificaciones funcionales aprobadas, no alteran los 11 requisitos ni autorizan implementar, desplegar o ejecutar tareas. La entrega académica SDD sigue restringida a arquitectura base.

@@ -59,3 +59,10 @@ Fuentes detalladas: [documentos consultados](docs/fuentes-consultadas.md). Estad
 - Se confirmó el push normal de la rama main a https://github.com/rutitasrutitas-eng/Rutitas_BackEnd y se verificó que el HEAD remoto coincide con el commit local.
 - El repositorio es público; la publicación de la autoría histórica fue autorizada por el usuario.
 - Esta constancia registra únicamente la publicación documental. La Constitución sigue pendiente de ratificación, las siete tareas permanecen sin ejecutar y no se realizó implementación ni selección tecnológica.
+
+## Registro exploratorio de tecnologías y API (2026-11-04)
+
+- Por comunicación del usuario, se registra **NoSQL como requisito docente reportado** y **Azure, AWS o Google Cloud** como únicos proveedores de hospedaje considerados permitidos; falta verificar el documento primario.
+- El equipo propuso **ASP.NET Core 10/C#**; se documentó **Google Cloud Run + Firestore NoSQL** como candidato principal, Maps para puntos públicos/rutas y Firebase Authentication como alternativa no elegida.
+- Se añadieron anexos de [stack](docs/propuestas-futuras/stack-backend-y-cloud.md) y [7 endpoints exploratorios](docs/propuestas-futuras/inventario-7-endpoints.md) con dos escenarios dependiendo de autenticación. No son `spec.md`, contratos ni decisiones ratificadas.
+- Constitución y espejo no modificados; 11 requisitos y las 7 tareas de arquitectura base se mantienen. No hubo implementación, despliegue, pruebas ni ejecución. La actualización está integrada en staging; su publicación queda pendiente de las validaciones y el push normal.

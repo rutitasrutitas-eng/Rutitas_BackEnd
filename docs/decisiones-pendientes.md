@@ -14,3 +14,11 @@ Todas estas decisiones siguen **sin aprobación humana**. No impiden preparar la
 | BACKEND-D08 | ¿Se acepta `task.md` y la configuración OpenCode? | Mantener, ajustar o rechazar convención | Revisión docente y convención aprobada | Mantener tareas sin ejecutar y agentes de solo lectura | Bloquea cambio de fase | PENDIENTE_DE_DESIGNAR | propuesto |
 
 Esta entrega **no** decide endpoints, modelos de producto, pantallas, proveedor cloud, base de datos ni operaciones funcionales.
+
+## Registro de alternativas exploradas (2026-11-04)
+
+El usuario comunicó dos restricciones académicas: **NoSQL obligatoria** y alojamiento limitado a **Azure, AWS o Google Cloud**. Queda pendiente incorporar la fuente primaria/fecha docente. El equipo prefiere **ASP.NET Core 10 con C#** y **Google Cloud Run + Firestore**, con Maps y posible Firebase Authentication. Esta preferencia **no** modifica el estado de `BACKEND-D05`, que sigue `propuesto` y sin aprobador designado.
+
+- [Razonamiento tecnológico, costos, permisos y datos](propuestas-futuras/stack-backend-y-cloud.md).
+- [Siete endpoints exploratorios condicionados al proveedor de identidad](propuestas-futuras/inventario-7-endpoints.md).
+- `BACKEND-D06` continúa abierto: no existe contrato Móvil ↔ Backend ratificado.
