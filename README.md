@@ -1,20 +1,60 @@
-# Rutitas — Backend (proyecto SDD independiente)
+# Rutitas — Backend
 
-**Estado académico:** listo para revisión documental, **no ratificado**. No incluye código ni funcionalidades específicas. No se ha ejecutado ninguna tarea de arquitectura base.
+## Descripción
 
-Este proyecto tiene **su propia** Constitución, AGENTS, memoria, subagentes, skills y spec/plan/task de arquitectura base. **No hereda automáticamente** autoridades de `../Movil/`.
+Rutitas es un proyecto universitario de software. Este repositorio contiene la preparación documental de su proyecto Backend y define una arquitectura base para orientar una posible implementación futura.
 
-## Documentos principales
+## Propósito y alcance actual
 
-- [Constitución canónica](.specify/memory/constitution.md) y [espejo de raíz](constitution.md).
-- [AGENTS](AGENTS.md) · [memoria](memoria.md).
-- Arquitectura base: [spec](specs/000-arquitectura-base/spec.md) · [plan](specs/000-arquitectura-base/plan.md) · [task](specs/000-arquitectura-base/task.md).
-- [Subagentes](subagentes/README.md) · [Skills](skills/README.md).
-- [Criterios y estados](docs/standards/estados-y-transiciones.md), [decisiones pendientes](docs/decisiones-pendientes.md), [integración propuesta](docs/integracion-entre-proyectos.md).
-- [Fuentes](docs/fuentes-consultadas.md) · [trazabilidad constitucional](docs/trazabilidad-constitucion.md) · [matriz de alineación](docs/matriz-alineacion.md).
+El objetivo actual es describir responsabilidades y límites generales de un servicio Backend: entradas, validación, aplicación, dominio futuro, adaptadores, persistencia abstracta, errores, seguridad y observabilidad. No se especifican funcionalidades de producto, operaciones, endpoints, modelos de negocio ni despliegues.
 
-## Qué puede mostrarse en clase
+La especificación registra **11 requisitos arquitectónicos**. El plan los relaciona con responsabilidades, tareas futuras y evidencia prevista. `task.md` contiene **7 tareas** propuestas; todas siguen pendientes, con ejecución `no_iniciado` y verificación `no_ejecutada`.
 
-La especificación recoge **11 requisitos** de arquitectura base; el plan organiza responsabilidades conceptuales y `task.md` contiene **7 tareas futuras** en `no_iniciado` y `no_ejecutada`. No define operaciones, endpoints ni pantallas concretas. Los perfiles de agentes y skills son **documentos**, no herramientas instaladas o activadas.
+## Metodología SDD
 
-La elección de stack, aprobación y repositorio canónico siguen pendientes. Ver decisiones propias.
+El trabajo sigue Spec-Driven Development: fuente y necesidad autorizadas → especificación y criterios → revisión → plan → tareas → autorización humana → ejecución y verificación futuras. Esta entrega termina antes de autorizar implementación.
+
+## Arquitectura base
+
+El plan describe límites conceptuales y dependencias, manteniendo una organización proporcional. No selecciona lenguaje, framework, base de datos, proveedor ni topología de despliegue. **No existe todavía una implementación Backend aprobada** ni un stack definitivo seleccionado.
+
+## Estructura
+
+```text
+Rutitas_Backend/
+├── .opencode/
+│   ├── agents/                 # cinco perfiles documentales
+│   └── skills/                 # cinco guías documentales
+├── .specify/memory/constitution.md
+├── docs/                       # decisiones, trazabilidad, integración y contexto
+├── skills/README.md
+├── specs/000-arquitectura-base/
+│   ├── spec.md
+│   ├── plan.md
+│   └── task.md
+├── subagentes/README.md
+├── AGENTS.md
+├── constitution.md             # espejo de la canónica
+├── memoria.md
+├── opencode.json
+└── README.md
+```
+
+## Gobierno y documentación
+
+- Constitución canónica propuesta: [`.specify/memory/constitution.md`](.specify/memory/constitution.md). `constitution.md` es su espejo exacto. **Estado: PENDIENTE_RATIFICACION**.
+- Procedimiento local: [`AGENTS.md`](AGENTS.md). Registro factual: [`memoria.md`](memoria.md).
+- Spec, plan y tareas: [`specs/000-arquitectura-base/`](specs/000-arquitectura-base/spec.md), [`plan.md`](specs/000-arquitectura-base/plan.md), [`task.md`](specs/000-arquitectura-base/task.md).
+- Los perfiles están en [`.opencode/agents/`](.opencode/agents/) y las skills en [`.opencode/skills/`](.opencode/skills/). Son definiciones para **OpenCode**; su instalación, ejecución o compatibilidad con Codex no está acreditada.
+
+## Estado académico y restricciones
+
+Preparación documental para revisión docente. No ejecutar las siete tareas, implementar software, definir endpoints funcionales, seleccionar stack, desplegar ni ratificar documentos. Las decisiones de autoridad, alcance, stack, controles técnicos e integración siguen pendientes de aprobación humana.
+
+## Relación futura con la aplicación móvil
+
+La comunicación con Móvil se mantiene como propuesta en [`docs/integracion-entre-proyectos.md`](docs/integracion-entre-proyectos.md), no como contrato aprobado. Una futura integración requiere acuerdo independiente entre ambos proyectos; la aplicación cliente no reemplaza la autorización del servidor.
+
+## Repositorio
+
+Repositorio oficial asignado: [Rutitas_BackEnd](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd). La documentación de este README no implica que la publicación haya sido confirmada.

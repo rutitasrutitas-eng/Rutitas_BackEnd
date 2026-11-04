@@ -48,7 +48,7 @@ La Constitución y AGENTS conservan **decisión=`propuesto`** hasta ratificació
 
 **Frontera Backend:** La responsabilidad de validar y proteger recursos del servidor se define como principio futuro. No se describen endpoints, tablas, autenticación concreta ni funcionalidades de Rutitas en esta entrega.
 
-Esta Constitución pertenece a `Proyecto Rutitas/Backend/`. La otra arquitectura tiene una Constitución distinta, también candidata; cualquier acuerdo entre ambas debe registrarse explícitamente y no anula sus procesos de aprobación.
+Esta Constitución pertenece a `Rutitas_Backend/`. La otra arquitectura tiene una Constitución distinta, también candidata; cualquier acuerdo entre ambas debe registrarse explícitamente y no anula sus procesos de aprobación.
 
 ## 2. Principios
 
@@ -136,12 +136,13 @@ El proyecto conserva su propia jerarquía documental; ningún documento requiere
 /.specify/memory/constitution.md   # autoridad canónica candidata de ESTE proyecto
 /constitution.md                   # espejo exacto, no fuente adicional
 /AGENTS.md                         # procedimiento específico de ESTE proyecto
+/opencode.json                     # permisos y agente predeterminado de ESTE proyecto
 /memoria.md                        # bitácora factual de ESTE proyecto
 /specs/000-arquitectura-base/spec.md
 /specs/000-arquitectura-base/plan.md
 /specs/000-arquitectura-base/task.md   # singular exigido por el profesor
-/subagentes/*.md                   # definiciones documentales locales
-/skills/*/SKILL.md                 # capacidades documentales locales
+/.opencode/agents/*.md             # subagentes nativos locales, de mínimo privilegio
+/.opencode/skills/*/SKILL.md       # skills nativas locales
 /docs/decisiones-pendientes.md
 /docs/standards/estados-y-transiciones.md
 ```
@@ -153,7 +154,7 @@ El proyecto conserva su propia jerarquía documental; ningún documento requiere
 | Spec | Objetivo, alcance, exclusiones, requisitos arquitectónicos con IDs y criterios de aceptación documental |
 | Plan | Responsabilidades, límites, dependencias, alternativas, riesgos, secuencia futura y validación prevista |
 | Task | IDs únicos, dependencias, prioridad, entregable, validación futura y estados no iniciados |
-| Subagente/skill | Rol o procedimiento, entradas, salidas, límites, subordinación constitucional y ausencia de activación |
+| Subagente/skill | Rol o procedimiento, entradas, salidas, límites, permisos mínimos, subordinación constitucional y prohibición de implementación |
 | Memoria | Hechos, documentos creados, fuentes, decisiones abiertas y próximas acciones; no se confunde con norma |
 
 ## 4. Criterios de preparación, término y release
