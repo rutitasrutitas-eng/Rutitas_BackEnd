@@ -65,4 +65,10 @@ Fuentes detalladas: [documentos consultados](docs/fuentes-consultadas.md). Estad
 - Por comunicación del usuario, se registra **NoSQL como requisito docente reportado** y **Azure, AWS o Google Cloud** como únicos proveedores de hospedaje considerados permitidos; falta verificar el documento primario.
 - El equipo propuso **ASP.NET Core 10/C#**; se documentó **Google Cloud Run + Firestore NoSQL** como candidato principal, Maps para puntos públicos/rutas y Firebase Authentication como alternativa no elegida.
 - Se añadieron anexos de [stack](docs/propuestas-futuras/stack-backend-y-cloud.md) y [7 endpoints exploratorios](docs/propuestas-futuras/inventario-7-endpoints.md) con dos escenarios dependiendo de autenticación. No son `spec.md`, contratos ni decisiones ratificadas.
-- Constitución y espejo no modificados; 11 requisitos y las 7 tareas de arquitectura base se mantienen. No hubo implementación, despliegue, pruebas ni ejecución. La actualización está integrada en staging; su publicación queda pendiente de las validaciones y el push normal.
+- Constitución y espejo no modificados; 11 requisitos y las 7 tareas de arquitectura base se mantienen. No hubo implementación, despliegue, pruebas ni ejecución. La actualización documental se publicó mediante push normal en main; el HEAD remoto se verificó coincidente con el commit local.
+
+## Publicación de anexos documentales verificada (2026-11-04)
+
+- Se confirmó el push normal de esta actualización documental a la rama main del repositorio propio.
+- El HEAD remoto se comprobó coincidente con el commit local; la revisión directa de GitHub confirmó los documentos del paquete.
+- No se implementó software ni se ejecutaron tareas; propuestas tecnológicas y el inventario de endpoints y las alternativas tecnológicas permanecen exploratorios.
