@@ -1,6 +1,6 @@
 # Reporte CI/CD-002 — Rutitas Backend
 
-**Fecha:** 2026-11-11. **Estado:** revisión/CI en progreso; no fusionado ni desplegado.
+**Fecha:** 2026-11-11. **Estado:** CI verificado; PR abierto y sin fusionar ni desplegar.
 
 ## 1. Auditoría inicial
 
@@ -33,14 +33,14 @@ El job SDD/YAML/Gitleaks se conserva. El job Dependency Review solo corre en PR.
 
 - Estado inicial CI/CD-001 (no esta rama): [run 43058862314](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43058862314) pasó parser YAML de ambos workflows, SDD, Gitleaks y detección; build .NET quedó `skipped` por no existir solución.
 - No se pudieron ejecutar pruebas de producto: no hay proyecto .NET ni tests. No se ejecutó empaquetado manual, despliegue, Terraform, ni creación de recursos facturables.
-- Verificación CI/CD-002, Gitleaks y Dependency Review: pendiente del PR de esta rama.
+- CI/CD-002: [run 43063688162](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43063688162) en commit 819a0bdc6b54568e618a000b1dc102d7d69b7914: parser YAML, SDD y Gitleaks `success`; detección .NET `success`; Dependency Review y build .NET `skipped` al no existir proyecto/manifiestos.
 - Auditoría de dependencias del proyecto: NO VERIFICADA; no hay manifiestos ni paquete real. Dependency Review solo cubrirá cambios de manifiestos en el PR.
 
 ## 5. Resultados, PR y estados
 
 - PR CI/CD-001: https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/pull/1 (abierto, base `main`, no fusionado).
-- PR CI/CD-002: pendiente de abrir hacia `feature/ci-cd-001-bootstrap`.
-- SHA final y URL de Actions de CI/CD-002: se completarán tras publicar y validar el PR.
+- PR CI/CD-002: [#2](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/pull/2), abierto hacia `feature/ci-cd-001-bootstrap`, sin fusionar.
+- Commit verificado: `819a0bdc6b54568e618a000b1dc102d7d69b7914`. El primer run [43061238943](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43061238943) falló únicamente porque Dependency Graph está deshabilitado; el log confirma que no fue un hallazgo de vulnerabilidad.
 - No se generaron artefactos de aplicación/API. No hay resultado de pruebas backend.
 
 ## 6. Requisitos cubiertos y pendientes
