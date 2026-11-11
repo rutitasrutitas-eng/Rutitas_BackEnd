@@ -1,0 +1,51 @@
+name: Rutitas Backend - paquete .NET (SIN desplegar a nube)
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_path:
+        description: 'Ruta validada al .csproj de API que se empaquetará'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Publicar artefacto .NET para revisión
+    runs-on: ubuntu-latest
+    environment: backend-release
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validar ruta a proyecto ASP.NET
+        shell: bash
+        env:
+          PROJECT: ${{ inputs.project_path }}
+        run: |
+          set -euo pipefail
+          [[ "$PROJECT" =~ ^[a-zA-Z0-9_./-]+\.csproj$ ]] || { echo '::error::Ruta csproj inválida'; exit 1; }
+          [[ "$PROJECT" != *'..'* ]] || { echo '::error::No se permite traversal'; exit 1; }
+          test -f "$PROJECT" || { echo '::error::No existe csproj'; exit 1; }
+          test -s global.json || { echo '::error::Falta global.json con SDK aprobado'; exit 1; }
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Generar paquete para revisión
+        shell: bash
+        env:
+          PROJECT: ${{ inputs.project_path }}
+        run: |
+          set -euo pipefail
+          dotnet restore "$PROJECT"
+          dotnet publish "$PROJECT" --configuration Release --no-restore --output ./publish-output
+          echo 'Artefacto generado: NO se desplegó en Azure, AWS o Google Cloud.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: backend-publish-review-only
+          path: publish-output/
+          if-no-files-found: error
+          retention-days: 7

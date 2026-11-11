@@ -1,0 +1,106 @@
+name: Rutitas Backend - CI SDD y dotnet
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, 'feature/ci-cd-*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sdd-and-security:
+    name: SDD y escaneo de secretos (no compila API)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validar documentos SDD existentes
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in README.md AGENTS.md memoria.md .specify/memory/constitution.md \
+              specs/000-arquitectura-base/spec.md specs/000-arquitectura-base/plan.md \
+              specs/000-arquitectura-base/task.md; do
+            test -s "$file" || { echo "::error::Falta o está vacío: $file"; exit 1; }
+          done
+          echo 'SDD documental presente: NO equivale a Constitución ratificada.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Gitleaks (historial Git completo)
+        run: >-
+          docker run --rm --volume "$GITHUB_WORKSPACE:/repo:ro"
+          ghcr.io/gitleaks/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9 git --redact --exit-code 1 /repo
+
+  detect-project:
+    name: Detectar solución o proyecto .NET
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.detect.outputs.present }}
+      project: ${{ steps.detect.outputs.project }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Detección de solución
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+          project="$(find . -type f \( -name '*.slnx' -o -name '*.sln' \) -not -path './.git/*' -print -quit)"
+          if [ -z "$project" ]; then
+            project="$(find . -type f -name '*.csproj' -not -path './.git/*' -print -quit)"
+          fi
+          if [ -z "$project" ]; then
+            echo 'present=false' >> "$GITHUB_OUTPUT"
+            echo 'No existe solución/proyecto .NET versionado; build y tests NO ejecutados.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'present=true' >> "$GITHUB_OUTPUT"
+            echo "project=${project#./}" >> "$GITHUB_OUTPUT"
+          fi
+
+  dotnet-build:
+    name: .NET - restore, build y tests
+    needs: [sdd-and-security, detect-project]
+    if: needs.detect-project.outputs.present == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Exigir SDK definido para esta solución
+        shell: bash
+        run: test -s global.json || { echo '::error::Falta global.json; el SDK no se selecciona por inferencia.'; exit 1; }
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Exigir proyecto de pruebas
+        shell: bash
+        run: |
+          set -euo pipefail
+          testproj="$(find . -type f \( -name '*Tests.csproj' -o -name '*Test.csproj' \) -print -quit)"
+          test -n "$testproj" || { echo '::error::No se encontró proyecto de pruebas .NET; CI incompleto'; exit 1; }
+      - name: Restaurar, compilar y probar
+        shell: bash
+        env:
+          PROJECT: ${{ needs.detect-project.outputs.project }}
+        run: |
+          set -euo pipefail
+          dotnet restore "$PROJECT"
+          dotnet build "$PROJECT" --configuration Release --no-restore
+          dotnet test "$PROJECT" --configuration Release --no-build --logger 'trx;LogFileName=test-results.trx'
+      - name: Conservar reportes
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: dotnet-test-results
+          path: '**/TestResults/**/*.trx'
+          if-no-files-found: warn
+          retention-days: 14
