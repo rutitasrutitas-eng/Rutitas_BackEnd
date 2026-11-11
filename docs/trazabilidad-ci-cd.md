@@ -15,9 +15,9 @@
 ## Evidencia de integración
 
 - Rama: `feature/ci-cd-001-bootstrap` desde `main`.
-- Commit de integración: pendiente de crear.
-- Pull Request: pendiente de abrir.
-- GitHub Actions / Gitleaks: pendiente de ejecutar.
+- Commit(s) de integración: `52022e94ca960201a2cdd0aa0930ceac9b1490ea` (integración) y `7ae1351ca3be1ff87bc585e067e0964fce6245ab` (validador YAML).
+- Pull Request: [#1 abierto hacia main](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/pull/1); aprobación/merge pendientes.
+- PR run: [43058283697](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43058283697), éxito. Sintaxis de `ci.yml`/`package-release.yml`, SDD y Gitleaks aprobados; detección .NET exitosa; job .NET omitido por falta de solución.
 - SDK .NET: no seleccionado; una solución futura deberá aportar `global.json` aprobado.
 - Constitución / ARCH-BE-01..11 / 7 tareas: sin modificación; tareas permanecen `no_iniciado` y `no_ejecutada`.
 

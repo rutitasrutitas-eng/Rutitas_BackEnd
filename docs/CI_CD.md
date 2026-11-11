@@ -16,3 +16,11 @@ La correspondencia requisito → control → evidencia y sus límites está en [
 El build condicional requiere solución/proyecto .NET y `global.json`; el SDK no se presupone ni se decide por este pipeline. El empaquetado manual es preparatorio y no se ejecuta durante esta revisión.
 
 La etapa inicial también parsea los dos archivos YAML con la biblioteca estándar YAML de Ruby; los resultados se registran en la matriz de trazabilidad.
+
+## Resultados remotos verificados — 2026-11-11
+
+- Rama: `feature/ci-cd-001-bootstrap`; HEAD al validar: `7ae1351ca3be1ff87bc585e067e0964fce6245ab`.
+- [PR #1 hacia main](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/pull/1), abierto y sin fusionar.
+- [GitHub Actions, run PR 43058283697](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43058283697): job SDD/YAML/Gitleaks **success**; detección .NET **success**; build/tests .NET **skipped** porque no hay `.sln`, `.slnx` ni `.csproj`.
+- Gitleaks: **success**, sin hallazgos reportados. La validación CI-05 parseó ambos workflows YAML sin error.
+- Build/API y empaquetado no verificados; no se ejecutó el workflow manual ni hubo despliegue.
