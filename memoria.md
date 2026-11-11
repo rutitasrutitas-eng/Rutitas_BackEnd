@@ -81,3 +81,12 @@ Fuentes detalladas: [documentos consultados](docs/fuentes-consultadas.md). Estad
 - El repositorio no contiene solución `.sln/.slnx` ni `.csproj`; por eso no se afirma build/test de backend. La ruta futura requiere `global.json` con SDK acordado; el workflow no selecciona una versión .NET por inferencia.
 - La Constitución y su espejo no se modificaron y siguen `PENDIENTE_RATIFICACION`. Se conservaron ARCH-BE-01..11 y las siete tareas de arquitectura base (`no_iniciado` / `no_ejecutada`).
 - El escaneo local de patrones de secretos encontró cero coincidencias. El PR #1 está abierto y el run PR 43058283697 pasó validación YAML, SDD y Gitleaks; detección .NET aprobada y build/tests omitidos por falta de proyecto. No se implementó API ni se desplegó infraestructura.
+
+## CI/CD-003 — Auditoría de integración y preparación (2026-11-11)
+
+- Se comprobó en GitHub que los PR #1 y #2 de CI/CD de Rutitas Backend aparecen **fusionados** en sus respectivas ramas destino; esto no prueba que CI/CD-002 se encuentre en `main` (el PR #2 estaba dirigido a la rama CI/CD-001).
+- En el árbol revisado de `main` continúan únicamente el SDD y los workflows; **no se halló código de aplicación ni proyectos compilables**. No se generan proyectos ficticios ni se afirman pruebas de producto.
+- Los tests .NET se ejecutarán explícitamente cuando se integren proyectos de pruebas reales; sin .sln/.csproj no se acreditan tests.
+- La nueva rama de trabajo CI/CD-003 no autoriza automáticamente un merge a `main`, publicación en Google Play ni despliegue a nube. La Constitución permanece `PENDIENTE_RATIFICACION`; se conservan requisitos/tareas de arquitectura base.
+- Pendientes: obtener el código funcional del equipo, revisar si hay cambios locales, guardar respaldo verificable, aprobar SDK y stack, habilitar Dependency Graph, configurar protección de rama y realizar CI real con evidencias por SHA.
+- La verificación de YAML/Actions y los nuevos resultados deben registrarse **después** del push y la ejecución remota; este registro no los considera aprobados por anticipado.
