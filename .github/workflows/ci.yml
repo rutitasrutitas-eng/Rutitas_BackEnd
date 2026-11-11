@@ -93,7 +93,7 @@ jobs:
           set -euo pipefail
           testproj="$(find . -type f \( -name '*Tests.csproj' -o -name '*Test.csproj' \) -print -quit)"
           test -n "$testproj" || { echo '::error::No se encontró proyecto de pruebas .NET; CI incompleto'; exit 1; }
-      - name: Restaurar, compilar y probar
+      - name: Restaurar, compilar y ejecutar TODOS los proyectos de pruebas
         shell: bash
         env:
           PROJECT: ${{ needs.detect-project.outputs.project }}
@@ -101,7 +101,24 @@ jobs:
           set -euo pipefail
           dotnet restore "$PROJECT"
           dotnet build "$PROJECT" --configuration Release --no-restore
-          dotnet test "$PROJECT" --configuration Release --no-build --logger 'trx;LogFileName=test-results.trx'
+
+          # Probar explícitamente los proyectos de test; dotnet test sobre una API
+          # no garantiza ejecutar tests cuando no hay un .sln/.slnx.
+          mapfile -d '' test_projects < <(
+            find . -type f \
+              \( -name '*Tests.csproj' -o -name '*Test.csproj' \) \
+              -not -path './.git/*' -print0
+          )
+          if (( ${#test_projects[@]} == 0 )); then
+            echo '::error::No existen proyectos de tests verificables.'
+            exit 1
+          fi
+          for test_project in "${test_projects[@]}"; do
+            echo "::group::Ejecutando tests: $test_project"
+            dotnet test "$test_project" --configuration Release \
+              --logger 'trx;LogFileName=test-results.trx'
+            echo '::endgroup::'
+          done
       - name: Conservar reportes
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f

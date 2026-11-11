@@ -81,3 +81,19 @@ Fuentes detalladas: [documentos consultados](docs/fuentes-consultadas.md). Estad
 - El repositorio no contiene solución `.sln/.slnx` ni `.csproj`; por eso no se afirma build/test de backend. La ruta futura requiere `global.json` con SDK acordado; el workflow no selecciona una versión .NET por inferencia.
 - La Constitución y su espejo no se modificaron y siguen `PENDIENTE_RATIFICACION`. Se conservaron ARCH-BE-01..11 y las siete tareas de arquitectura base (`no_iniciado` / `no_ejecutada`).
 - El escaneo local de patrones de secretos encontró cero coincidencias. El PR #1 está abierto y el run PR 43058283697 pasó validación YAML, SDD y Gitleaks; detección .NET aprobada y build/tests omitidos por falta de proyecto. No se implementó API ni se desplegó infraestructura.
+
+## CI/CD-003 — Auditoría de integración y preparación (2026-11-11)
+
+- Se comprobó en GitHub que los PR #1 y #2 de CI/CD de Rutitas Backend aparecen **fusionados** en sus respectivas ramas destino; esto no prueba que CI/CD-002 se encuentre en `main` (el PR #2 estaba dirigido a la rama CI/CD-001).
+- En el árbol revisado de `main` continúan únicamente el SDD y los workflows; **no se halló código de aplicación ni proyectos compilables**. No se generan proyectos ficticios ni se afirman pruebas de producto.
+- Los tests .NET se ejecutarán explícitamente cuando se integren proyectos de pruebas reales; sin .sln/.csproj no se acreditan tests.
+- La nueva rama de trabajo CI/CD-003 no autoriza automáticamente un merge a `main`, publicación en Google Play ni despliegue a nube. La Constitución permanece `PENDIENTE_RATIFICACION`; se conservan requisitos/tareas de arquitectura base.
+- Antes de editar, el worktree estaba limpio. Se respaldaron todas las refs en ../_Rutitas_CI_CD_003_Backups/2026-11-11_ci003/Rutitas_BackEnd.bundle (SHA-256 5BC0283026EFBF362874DCEFF773461B2DE31D9156FE919E540709C31B5F3A53) y se verificó el bundle. Las versiones originales de .github/workflows/ci.yml y memoria.md quedaron fuera del repo en ../_Rutitas_CI_CD_003_Backup_local/Rutitas_Backend/ con SHA-256 5FC8924FFEEDAC31818837DDD5B9A1E8822ABAB806CDE6AB3752086863243F0E y 8832E694EFECAC9CA8577E9208AC904EC0AA21C4BE7E5F6BA0626A7ADBCB8101.
+- El workflow conserva restore/build y ahora encuentra todos los proyectos *Tests.csproj/*Test.csproj, ejecuta dotnet test para cada uno y falla si no encuentra ninguno cuando existe solución .NET. En main no se halló solución ni proyecto; este run no pudo ejercitar el bucle de pruebas reales.
+
+### Publicación y verificación remota
+
+- Rama: feature/ci-cd-003-backend-tests; commit de código verificado: ab68e349dccba431d0873f4f95d8b720d83ff158.
+- PR #3: https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/pull/3, abierto hacia main y sin fusionar.
+- Actions PR run: https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43081375095. Validación YAML, SDD y Gitleaks: success; detección .NET: success; build/tests: skipped por ausencia de solución/proyecto .NET.
+- No se afirma que tests de producto hayan pasado. Pendientes: incorporar código y pruebas reales, aprobar SDK/stack, habilitar Dependency Graph y revisar CI con evidencia por SHA. No se cambió main, Constitución, requisitos ni estados de arquitectura base; no hubo despliegue.
