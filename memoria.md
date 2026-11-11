@@ -72,3 +72,12 @@ Fuentes detalladas: [documentos consultados](docs/fuentes-consultadas.md). Estad
 - Se confirmó el push normal de esta actualización documental a la rama main del repositorio propio.
 - El HEAD remoto se comprobó coincidente con el commit local; la revisión directa de GitHub confirmó los documentos del paquete.
 - No se implementó software ni se ejecutaron tareas; propuestas tecnológicas y el inventario de endpoints y las alternativas tecnológicas permanecen exploratorios.
+
+## Integración CI/CD-001 (2026-11-11)
+
+- Fuente de archivos: `Rutitas_Pipelines_CI_CD_Preparados.zip`; se integró únicamente la carpeta Backend a la rama `feature/ci-cd-001-bootstrap`, creada desde `main` tras volver a comparar `origin/main`.
+- Se añadieron workflows de SDD/Gitleaks, detección de solución .NET, compilación condicional y empaquetado manual de revisión; junto con `docs/CI_CD.md` y `specs/001-ci-cd/`.
+- Se añadió `docs/trazabilidad-ci-cd.md` para relacionar CI-01..04, CD-01 y SEG-01 con controles, evidencia y límites. El empaquetado manual no se ejecutó.
+- El repositorio no contiene solución `.sln/.slnx` ni `.csproj`; por eso no se afirma build/test de backend. La ruta futura requiere `global.json` con SDK acordado; el workflow no selecciona una versión .NET por inferencia.
+- La Constitución y su espejo no se modificaron y siguen `PENDIENTE_RATIFICACION`. Se conservaron ARCH-BE-01..11 y las siete tareas de arquitectura base (`no_iniciado` / `no_ejecutada`).
+- El escaneo local de patrones de secretos encontró cero coincidencias. El PR #1 está abierto y el run PR 43058283697 pasó validación YAML, SDD y Gitleaks; detección .NET aprobada y build/tests omitidos por falta de proyecto. No se implementó API ni se desplegó infraestructura.
