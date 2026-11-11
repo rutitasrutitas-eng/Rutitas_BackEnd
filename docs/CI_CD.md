@@ -14,3 +14,5 @@
 La correspondencia requisito → control → evidencia y sus límites está en [trazabilidad CI/CD-001](trazabilidad-ci-cd.md). Esta automatización es una propuesta local del Backend y queda sujeta a revisión humana; no altera ARCH-BE-01..11 ni sus siete tareas futuras.
 
 El build condicional requiere solución/proyecto .NET y `global.json`; el SDK no se presupone ni se decide por este pipeline. El empaquetado manual es preparatorio y no se ejecuta durante esta revisión.
+
+La etapa inicial también parsea los dos archivos YAML con la biblioteca estándar YAML de Ruby; los resultados se registran en la matriz de trazabilidad.
