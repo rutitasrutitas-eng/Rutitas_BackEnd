@@ -81,3 +81,15 @@ Fuentes detalladas: [documentos consultados](docs/fuentes-consultadas.md). Estad
 - El repositorio no contiene solución `.sln/.slnx` ni `.csproj`; por eso no se afirma build/test de backend. La ruta futura requiere `global.json` con SDK acordado; el workflow no selecciona una versión .NET por inferencia.
 - La Constitución y su espejo no se modificaron y siguen `PENDIENTE_RATIFICACION`. Se conservaron ARCH-BE-01..11 y las siete tareas de arquitectura base (`no_iniciado` / `no_ejecutada`).
 - El escaneo local de patrones de secretos encontró cero coincidencias. El PR #1 está abierto y el run PR 43058283697 pasó validación YAML, SDD y Gitleaks; detección .NET aprobada y build/tests omitidos por falta de proyecto. No se implementó API ni se desplegó infraestructura.
+
+## Auditoría y preparación CI/CD-002 (2026-11-11)
+
+- Se revisaron `main`, la rama y el PR CI/CD-001, README, AGENTS, Constitución, memoria, SDD, decisiones y archivos rastreados. `main` remoto permanece en `b0dc60b91b73536e27dc6616132a225663d29aed`; PR #1 sigue abierto, sin fusionar.
+- Respaldo verificable de refs/historial: `..\_Rutitas_CI_CD_002_Backups\2026-11-11\Rutitas_BackEnd.bundle`; manifiesto y SHA-256 registrados en `docs/REPORTE_CI_CD_002.md`. Bundle validado y clon espejo recuperado en `3ec870e2e827d6cd6307bbd688c57e64d15c5933`; el árbol auditado estaba limpio y sin archivos no rastreados.
+- CI/CD-002 se aisló en `feature/ci-cd-002-backend`, derivada de la rama CI/CD-001 para apilar PR sin duplicar el diff del PR #1.
+- Se añadió Dependency Review para bloquear vulnerabilidades nuevas altas/críticas en los cambios de dependencias del PR. SHA inmutable de acción: `a1d282b36b6f3519aa1f3fc636f609c47dddb294`.
+- Se añadieron spec, plan, tasks, checklist, trazabilidad y reporte de auditoría. No existen `.sln`, `.slnx`, `.csproj`, tests ni manifiestos de paquetes; build, auditoría de dependencias del producto y CD real permanecen no verificados.
+- La Constitución/espejo siguen idénticas y `PENDIENTE_RATIFICACION`; ARCH-BE-01..11 y siete tareas base permanecen intactos (`no_iniciado` / `no_ejecutada`). No se eligió SDK/cloud ni se creó infraestructura.
+- Validación remota, Gitleaks y Dependency Review de la rama CI/CD-002 pendientes del PR; no se ejecutó paquete manual ni despliegue.
+
+- Corrección de CI/CD-002: el primer Dependency Review móvil falló por configuración externa (`Dependency graph is disabled`), no por vulnerabilidades. No cambié settings del repositorio; el job quedó condicionado a detección de proyecto real y la brecha se registra para habilitar Dependency Graph antes de añadir dependencias.
