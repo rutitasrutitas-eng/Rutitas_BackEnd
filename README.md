@@ -1,5 +1,13 @@
 # Rutitas — Backend
 
+## Estado técnico observado (13/11/2026)
+
+La rama `feature/sdd-azure-devsecops` contiene una API ASP.NET Core 10 con MongoDB y siete endpoints bajo `/api/v1`: registro, login, logout, consulta y edición del perfil propio, listado y detalle de rutas. La revisión correctiva se desarrolla en `fix/mark-api-devsecops-review` y apunta a la rama de Mark. Consulte el [informe de validación](docs/VALIDACION_MARK.md), el [contrato OpenAPI](specs/001-unit2-api/contracts/openapi.yaml) y la [matriz Android](docs/COMPATIBILIDAD_ANDROID.md).
+
+Para reproducir localmente: instalar el SDK definido en [`global.json`](global.json) y Docker; ejecutar `dotnet restore Rutitas.Api/Rutitas.Api.slnx`, `dotnet build Rutitas.Api/Rutitas.Api.slnx -c Release --no-restore` y `dotnet test Rutitas.Api/Rutitas.Api.slnx -c Release --no-restore --collect "XPlat Code Coverage"`. Las pruebas de repositorio usan un MongoDB temporal de Testcontainers. Las 63 pruebas comunicadas anteriormente son un reporte local histórico; el resultado de CI debe comprobarse en el SHA exacto. No se requiere Atlas para las pruebas.
+
+**Gobierno:** la Constitución y las decisiones de stack/contrato móvil permanecen sin ratificación. Los apartados documentales históricos siguientes describen el estado previo a la entrega de Mark; no sustituyen el estado técnico anterior.
+
 ## Descripción
 
 Rutitas es un proyecto universitario de software. Este repositorio contiene la preparación documental de su proyecto Backend y define una arquitectura base para orientar una posible implementación futura.

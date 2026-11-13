@@ -2,7 +2,7 @@ name: Rutitas Backend - CI SDD y dotnet
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'feature/sdd-azure-devsecops']
   push:
     branches: [main, 'feature/ci-cd-*']
   workflow_dispatch:
@@ -84,7 +84,7 @@ jobs:
       - name: Exigir SDK definido para esta solución
         shell: bash
         run: test -s global.json || { echo '::error::Falta global.json; el SDK no se selecciona por inferencia.'; exit 1; }
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
           global-json-file: global.json
       - name: Exigir proyecto de pruebas
@@ -99,8 +99,35 @@ jobs:
           PROJECT: ${{ needs.detect-project.outputs.project }}
         run: |
           set -euo pipefail
-          dotnet restore "$PROJECT"
+          dotnet restore "$PROJECT" -p:NuGetAudit=true -p:NuGetAuditMode=all
           dotnet build "$PROJECT" --configuration Release --no-restore
+
+          # El análisis de código produce diagnósticos revisables; su umbral
+          # de bloqueo se aprobará tras clasificar la línea base.
+          dotnet build "$PROJECT" --configuration Release --no-restore \
+            -p:EnableNETAnalyzers=true -p:AnalysisMode=All \
+            -p:RunAnalyzersDuringBuild=true
+
+          dotnet package list --project "$PROJECT" --vulnerable \
+            --include-transitive --format json > nuget-vulnerabilities.json
+          python3 - <<'PY'
+          import json
+          data = json.load(open('nuget-vulnerabilities.json', encoding='utf-8'))
+          def findings(node):
+              if isinstance(node, dict):
+                  for key, value in node.items():
+                      if key == 'vulnerabilities' and isinstance(value, list):
+                          yield from value
+                      else:
+                          yield from findings(value)
+              elif isinstance(node, list):
+                  for value in node:
+                      yield from findings(value)
+          count = sum(1 for _ in findings(data))
+          print(f'NuGet advisories encontrados: {count}')
+          if count:
+              raise SystemExit('Revisar vulnerabilidades NuGet antes de integrar.')
+          PY
 
           # Probar explícitamente los proyectos de test; dotnet test sobre una API
           # no garantiza ejecutar tests cuando no hay un .sln/.slnx.
@@ -113,10 +140,15 @@ jobs:
             echo '::error::No existen proyectos de tests verificables.'
             exit 1
           fi
+          if (( ${#test_projects[@]} != 5 )); then
+            echo "::error::Se esperaban cinco proyectos de pruebas; se encontraron ${#test_projects[@]}."
+            exit 1
+          fi
           for test_project in "${test_projects[@]}"; do
             echo "::group::Ejecutando tests: $test_project"
             dotnet test "$test_project" --configuration Release \
-              --logger 'trx;LogFileName=test-results.trx'
+              --no-restore --logger 'trx;LogFileName=test-results.trx' \
+              --collect 'XPlat Code Coverage'
             echo '::endgroup::'
           done
       - name: Conservar reportes
@@ -124,6 +156,16 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: dotnet-test-results
-          path: '**/TestResults/**/*.trx'
+          path: |
+            **/TestResults/**/*.trx
+            **/TestResults/**/coverage.cobertura.xml
+          if-no-files-found: error
+          retention-days: 14
+      - name: Conservar auditoría NuGet
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: nuget-vulnerability-audit
+          path: nuget-vulnerabilities.json
           if-no-files-found: warn
           retention-days: 14

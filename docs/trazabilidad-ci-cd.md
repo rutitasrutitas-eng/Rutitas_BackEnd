@@ -1,5 +1,9 @@
 # Trazabilidad SDD — CI/CD-001 Backend
 
+## Corrección para revisión de Mark (13/11/2026)
+
+`global.json` → selección de SDK 10.0.400; PR a `feature/sdd-azure-devsecops` → disparador de `ci.yml`; cinco `*Tests.csproj` → TRX y cobertura Cobertura XML; Gitleaks y SDD → controles conservados. El estado de ejecución para el SHA final y los hallazgos se registran en [VALIDACION_MARK.md](VALIDACION_MARK.md). La evidencia histórica siguiente corresponde a otros commits y no valida la API de Mark.
+
 **Ámbito:** exclusivamente Rutitas Backend. **Autoridad:** Constitución local candidata, `PENDIENTE_RATIFICACION`. **Decisión CI/CD:** propuesta; revisión humana del PR pendiente. Este anexo no cambia la arquitectura base ni aprueba stack, SDK, proveedores o infraestructura.
 
 | Requisito | Evidencia preparada | Criterio de cierre de esta fase | Límite actual |

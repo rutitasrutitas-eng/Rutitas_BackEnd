@@ -1,5 +1,7 @@
 # 013 — Especificación CI/CD DevSecOps de Rutitas Backend
 
+> **Cotejo del repositorio — 13/11/2026:** El inventario del ZIP en la sección 2 es antecedente, no workflows presentes en esta rama. Aquí sólo existen `.github/workflows/ci.yml` y `package-release.yml`. `ci.yml` se está corrigiendo para el PR a la rama de Mark, con SDK 10.0.400, cinco suites, TRX, cobertura, SDD y Gitleaks. SAST, auditoría explícita de NuGet y escaneo Docker siguen propuestos o pendientes de evidencia según [validación técnica](../../docs/VALIDACION_MARK.md). No hay CD Azure habilitado.
+
 **Fecha:** 12/11/2026  
 **Estado de decisión:** propuesto · **Ejecución:** no_iniciado · **Aprobación:** pendiente  
 **Alcance:** backend ASP.NET Core 10, siete endpoints existentes, pruebas, contenedor y despliegue futuro a Azure staging.

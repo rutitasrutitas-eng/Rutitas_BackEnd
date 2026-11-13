@@ -1,6 +1,6 @@
 # Tareas — API Unidad II
 
-> **CONCILIACIÓN TÉCNICA — 11/11/2026:** Hay implementación local de las siete operaciones y el usuario reportó **63/63 pruebas aprobadas** tras iniciar Docker. Esta es evidencia técnica local, **no** aprobación formal del Gate 0, del contrato móvil ni del despliegue. Los campos **Decisión / Ejecución / Verificación** del encabezado y la tabla de tareas describen el *registro SDD original*, que no ha sido actualizado mediante acta de autorización. La implementación real usa `PasswordHasher<User>` y filtra rutas con `Status="active"` y `Visibility="public"`; referencias a Argon2id o `isActive` en el diseño son propuestas históricas, no afirmaciones sobre el código. Consultar [estado real](../../docs/ESTADO_REAL_BACKEND.md) y [brechas](../../docs/BRECHAS_FASE1_11NOV2026.md).
+> **Estado técnico revisado — 13/11/2026:** La API y pruebas existen en la rama de Mark; el reporte de 63 aprobadas es local e histórico. Esta tabla conserva el plan SDD original, no acredita ejecución ni aprobación de cada tarea. Las actas y ADR mencionadas son entregables futuros, no archivos existentes. Véanse [validación técnica](../../docs/VALIDACION_MARK.md) y [compatibilidad Android](../../docs/COMPATIBILIDAD_ANDROID.md).
 
 **ID:** TASK-U2-API  
 **Decisión:** `propuesto` · **Ejecución:** `no_iniciado` · **Verificación:** `no_ejecutada` · **Tipo:** `experimental`
@@ -43,7 +43,7 @@ Los estados formales de la tabla no cambian. Bajo las reglas documentales actual
 | BE-U2-03 | No ejecutada; requiere acuerdo con Móvil | no_iniciado | `D06-A`, `D13` |
 | BE-U2-04 | `spec.md` revisada; sin cambios | no_iniciado | `BE-U2-01`, `BE-U2-02` |
 | BE-U2-05 | `plan.md` y OpenAPI revisados; contrato válido | no_iniciado | `BE-U2-04` |
-| BE-U2-05A | Paquete de revisión Móvil preparado en [revision-openapi-movil](../../docs/revision-openapi-movil.md) | no_iniciado | Móvil, `D06-B` |
+| BE-U2-05A | Matriz técnica de revisión Móvil preparada en [compatibilidad Android](../../docs/COMPATIBILIDAD_ANDROID.md); aceptación humana pendiente | no_iniciado | Móvil, `D06-B` |
 | BE-U2-06 | `task.md` y matriz revisadas; sin cierre | no_iniciado | `BE-U2-05A` |
 
 La revisión preparó evidencia documental, pero **no** marca tareas como ejecutadas, verificadas o aprobadas. Gate 0-A sigue pendiente.

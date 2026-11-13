@@ -158,11 +158,14 @@ builder.Services
             {
                 var jti = context.Principal?
                     .FindFirst("jti")?.Value;
+                var subject = context.Principal?
+                    .FindFirst("sub")?.Value;
 
-                if (string.IsNullOrWhiteSpace(jti))
+                if (string.IsNullOrWhiteSpace(jti) ||
+                    string.IsNullOrWhiteSpace(subject))
                 {
                     context.Fail(
-                        "Token identifier missing.");
+                        "Required token claims missing.");
                     return;
                 }
 
@@ -172,16 +175,22 @@ builder.Services
                         context.HttpContext.RequestServices
                             .GetRequiredService<
                                 ITokenRevocationRepository>();
+                    var users = context.HttpContext.RequestServices
+                        .GetRequiredService<IUserRepository>();
 
                     var revoked =
                         await repository.IsRevokedAsync(
                             jti,
                             context.HttpContext.RequestAborted);
 
-                    if (revoked)
+                    var user = await users.GetByIdAsync(
+                        subject,
+                        context.HttpContext.RequestAborted);
+
+                    if (revoked || user is null || user.Status != "active")
                     {
                         context.Fail(
-                            "Token has been revoked.");
+                            "Token is no longer valid.");
                     }
                 }
                 catch (Exception ex)

@@ -1,5 +1,7 @@
 # Matriz de trazabilidad y brechas — E01–E52 / N01–N20
 
+> **Actualización técnica 13/11/2026:** la rama de Mark implementa únicamente las siete operaciones de identidad, perfil propio y lectura de rutas documentadas en [OpenAPI](../001-unit2-api/contracts/openapi.yaml). La matriz E01–E52/N01–N20 siguiente conserva el cotejo documental histórico y no afirma que viajes, reservas u otras capacidades estén implementadas. Véanse [validación](../../docs/VALIDACION_MARK.md) y [compatibilidad Android](../../docs/COMPATIBILIDAD_ANDROID.md).
+
 **Fecha de corte:** 11/11/2026. **Estado:** revisión documental, no aprobada.
 **Fuentes:** `002-catalogo-funcional/inventario-funcional.md` y `spec.md` de los módulos 003–010 entregados en las fases anteriores.
 **Regla:** la aparición de un identificador en un `spec.md` NO acredita un contrato completo ni un endpoint implementado; aquí se distingue mención, especificación y ejecución.

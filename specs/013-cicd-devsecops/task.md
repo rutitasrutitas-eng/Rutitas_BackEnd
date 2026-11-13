@@ -1,5 +1,7 @@
 # 013 — Tareas CI/CD DevSecOps
 
+> **Cotejo 13/11/2026:** la tabla conserva las tareas propuestas originales. La rama correctiva implementa preparación de CI, pero cada tarea sólo se verificará con el run del SHA exacto y revisión humana. Véase [validación técnica](../../docs/VALIDACION_MARK.md).
+
 **Decisión:** propuesto · **Ejecución:** no_iniciado · **Verificación:** no_ejecutada.
 
 | ID | Tarea | Dependencias | Evidencia de cierre | Estado |

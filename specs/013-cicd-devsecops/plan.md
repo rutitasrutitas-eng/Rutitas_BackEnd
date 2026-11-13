@@ -1,5 +1,7 @@
 # 013 — Plan de integración y entrega DevSecOps
 
+> **Cotejo 13/11/2026:** la rama de Mark contiene la solución y los cinco proyectos de pruebas; `.github/workflows/ci.yml` es el workflow real de este repositorio. Véase [validación técnica](../../docs/VALIDACION_MARK.md) para distinguir controles corregidos, ejecutados y pendientes. Azure permanece fuera de alcance.
+
 **Estado:** propuesto, no ejecutar CD hasta aprobación.
 
 ## Fase A — Preparación GitHub (sin despliegue)

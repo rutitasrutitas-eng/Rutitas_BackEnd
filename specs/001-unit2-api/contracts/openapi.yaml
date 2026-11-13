@@ -15,11 +15,11 @@ servers:
   - url: https://api.rutitas.example/api/v1
     description: URL ilustrativa de despliegue futuro; no existe ni está aprobada
 x-phase: Unidad II (3-4 nov 2026)
-x-verification: pruebas_locales_reportadas_63_ok_2026-11-06_no_verificadas_en_esta_revision
+x-verification: pruebas_63_reportadas_historicamente_ci_del_sha_revisado_pendiente
 x-cloud-deployment: no_verificado
 x-mobile-contract-approval: pendiente
 x-status: propuesto
-x-implementation: implementacion_local_observada
+x-implementation: siete_operaciones_presentes_en_rama_feature_sdd_azure_devsecops
 x-decisions:
   - BACKEND-D05
   - BACKEND-D06

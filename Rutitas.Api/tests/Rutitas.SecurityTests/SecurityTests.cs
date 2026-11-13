@@ -26,7 +26,8 @@ public class SecurityTests
     [Fact] public async Task EscalationByMassAssignment_IsRejected()
     {
         using var app=new TestApiFactory();using var client=app.CreateClient();
-        Assert.Equal(HttpStatusCode.Created,(await client.PostAsJsonAsync("/api/v1/auth/register",new {email="alumno@example.com",password="ValidPassword123!",displayName="Alumno",role="admin"})).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest,(await client.PostAsJsonAsync("/api/v1/auth/register",new {email="alumno@example.com",password="ValidPassword123!",displayName="Alumno",role="admin"})).StatusCode);
+        Assert.Equal(HttpStatusCode.Created,(await client.PostAsJsonAsync("/api/v1/auth/register",new {email="alumno@example.com",password="ValidPassword123!",displayName="Alumno"})).StatusCode);
         var login=await client.PostAsJsonAsync("/api/v1/auth/login",new {email="alumno@example.com",password="ValidPassword123!"});
         using var doc=JsonDocument.Parse(await login.Content.ReadAsStringAsync());
         Assert.Equal("user",doc.RootElement.GetProperty("user").GetProperty("role").GetString());
