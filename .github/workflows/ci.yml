@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, 'feature/sdd-azure-devsecops']
   push:
-    branches: [main, 'feature/ci-cd-*']
+    branches: [main, 'feature/ci-cd-*', 'fix/mark-api-devsecops-review']
   workflow_dispatch:
 
 permissions:
