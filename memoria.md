@@ -6,6 +6,7 @@
 - La solución contiene API real y cinco proyectos de pruebas. Se restauró con SDK 10.0.400 y se compiló en Release con cero advertencias y errores, también en una copia temporal. Windows Control de aplicaciones bloqueó la carga de DLL (`0x800711C7`) tanto desde OneDrive como desde `%LOCALAPPDATA%\Temp`; Architecture produjo TRX con 2 fallos de carga. Se buscará evidencia de CI por SHA; no se atribuyen a CI las 63 pruebas históricas.
 - Se detectó acceso a rutas con JWT de usuario inactivo y aceptación silenciosa de `role` en registro; se prepararon correcciones y pruebas negativas. `global.json`, triggers, TRX y cobertura se alinean para revisión. Véanse [informe técnico](docs/VALIDACION_MARK.md) y [compatibilidad Android](docs/COMPATIBILIDAD_ANDROID.md).
 - La Constitución, el contrato entre equipos, el stack y decisiones Azure siguen pendientes de aprobación humana. Esta memoria registra implementación y pruebas observadas, no una ratificación.
+- El run [43464562923](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43464562923) del SHA `77d3e1e` aprobó 69/69 pruebas en cinco suites, incluidos tres casos Mongo/Testcontainers; build Release sin advertencias, SDD y Gitleaks correctos, NuGet con 0 advisories. Publicó TRX y Cobertura XML. Un cambio posterior de rate limiting/análisis requiere run propio antes de atribuirle estos resultados.
 
 **Estado:** preparación documental para revisión docente. Constitución y AGENTS propuestos, **no ratificados**.
 

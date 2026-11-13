@@ -104,7 +104,7 @@ jobs:
 
           # El análisis de código produce diagnósticos revisables; su umbral
           # de bloqueo se aprobará tras clasificar la línea base.
-          dotnet build "$PROJECT" --configuration Release --no-restore \
+          dotnet build "$PROJECT" --configuration Release --no-restore --no-incremental \
             -p:EnableNETAnalyzers=true -p:AnalysisMode=All \
             -p:RunAnalyzersDuringBuild=true
 
