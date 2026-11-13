@@ -53,3 +53,18 @@ Desktop.ini
 # Estado local de infraestructura generado
 *.tfstate
 *.tfstate.*
+
+# Archivos generados por .NET
+**/bin/
+**/obj/
+**/.vs/
+**/TestResults/
+
+# Configuracion privada
+**/*.local.http
+**/.env
+**/.env.*
+**/*.pfx
+**/*.p12
+**/*.pem
+**/*.key
