@@ -6,7 +6,7 @@
 
 - Estado inicial verificado: rama `fix/mark-api-devsecops-review`, limpia y en HEAD remoto `808bb225c1e494f38dad951aaa08b177104b4fb4`; la base de Mark seguía en `0f05c07d099c8a4bb396719d804ec0698a29254a`. Se creó respaldo local `backup/fix-mark-api-devsecops-review-before-sdk-401-2026-11-14`.
 - `global.json` conserva `10.0.400` y cambia `rollForward` a `latestPatch`. Solo está instalado localmente SDK `10.0.400`, y `dotnet --version` reporta `10.0.400`. No se afirma una ejecución local bajo `10.0.401`, pues no está instalado.
-- `JwtValidationTests` firma tokens con el `Jwt:SigningKey`, emisor y audiencia obtenidos de la configuración real del `TestApiFactory`. La regresión crea un token con `jti` válido, vigencia actual, emisor y audiencia configurados, sin claim `sub`; comprueba explícitamente la ausencia de `sub` y presencia de `jti`. Primero usa el token de control emitido por login y verifica HTTP 200; el token firmado sin `sub` recibe HTTP 401.
+- `JwtValidationTests` firma tokens con el `Jwt:SigningKey`, emisor y audiencia obtenidos de la configuración real del `TestApiFactory`. La regresión crea un token de control y uno sin `sub` con el mismo helper/configuración/clave; el control añade `sub`, ambos llevan `jti`, issuer, audience y expiración futura. El control firmado recibe HTTP 200; el token sin `sub` recibe HTTP 401. El test además decodifica el JWT y afirma issuer, audience, expiración, `jti` y ausencia de `sub`.
 
 ### Resultados locales
 
@@ -24,13 +24,13 @@
 
 ### GitHub Actions para el código actualizado
 
-- Commit de código publicado: `0bc2736ad320a3c6ac1320693b91504949a8a123`, en la rama existente del PR #4.
-- [Run 43542360312](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43542360312): los 3 jobs terminaron en **success**: detectar solución, SDD/YAML/Gitleaks y .NET 10 con restore, build, análisis, auditoría y cinco suites.
+- Commits de código publicados: `0bc2736ad320a3c6ac1320693b91504949a8a123` (SDK/primera regresión) y `2e8495ffde1120f5cc45b941747c5b9e23792532` (control firmado construido con el mismo helper, que es la versión final de la prueba).
+- [Run final de código 43543201150](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43543201150), SHA `2e8495f`: los 3 jobs terminaron en **success**: detectar solución, SDD/YAML/Gitleaks y .NET 10 con restore, build, análisis, auditoría y cinco suites. El run [43542360312](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43542360312) también pasó para el commit previo `0bc2736`.
 - Conteo del run: Architecture 2, Contract 3, Integration 13, Security 24 y Unit 29 = **71/71**, 0 fallidas y 0 omitidas. Incluye la nueva regresión JWT.
 - NuGet audit remoto: 0 advisories. Build normal: 0 warnings/errores. Análisis completo: 186 warnings/0 errores. Gitleaks remoto: success.
 - `actions/setup-dotnet` leyó `global.json` con `rollForward: latestPatch`; el log del runner indica que seleccionó/ya tenía SDK `10.0.404` en la feature band 10.0.4xx. El equipo local solo tiene instalado `10.0.400`; `10.0.401` exacto no se ejecutó en ninguno de estos entornos y no se declara verificado.
 
-No se cambió el PR de destino, `main` ni la rama de Mark. Los resultados definitivos de CI se comprobarán también para el siguiente SHA documental.
+No se cambió el PR de destino, `main` ni la rama de Mark. La actualización documental pendiente se publicará por separado y validará nuevamente el mismo código.
 
 ## Actualización de conflictos y advertencias (13/11/2026)
 
