@@ -4,6 +4,10 @@
 
 **Estado:** propuesto, no ejecutar CD hasta aprobación.
 
+## Evidencia correctiva de CI local (13/11/2026)
+
+En la rama de revisión, `global.json` queda en SDK `10.0.400` con roll-forward deshabilitado: fue la versión .NET 10 efectivamente verificada en el equipo. Se preservaron los jobs de las cinco suites y los reportes al resolver el workflow. La validación local de Testcontainers quedó incompleta porque Docker no está disponible; no se sustituye por Atlas ni por datos externos. El análisis registró 186 advertencias y 0 errores; las correcciones prioritarias y advertencias restantes se documentan en [inventario C#](../../docs/ADVERTENCIAS_ANALISIS_CSHARP.md). No hay verificación Actions del nuevo SHA hasta publicar la actualización. El estado de CD y las aprobaciones de Azure no cambian.
+
 ## Fase A — Preparación GitHub (sin despliegue)
 1. Confirmar repositorio oficial, permisos de escritura y rama base (`main` o `develop`, nunca suponerla).
 2. Realizar respaldo de `Backend` y validar `.gitignore` y secretos. La copia local puede contener más cambios recientes que el último ZIP; **esa copia es la fuente de verdad**.

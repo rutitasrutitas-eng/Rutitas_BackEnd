@@ -105,3 +105,16 @@ Fuentes detalladas: [documentos consultados](docs/fuentes-consultadas.md). Estad
 - PR #3: https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/pull/3, abierto hacia main y sin fusionar.
 - Actions PR run: https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43081375095. Validación YAML, SDD y Gitleaks: success; detección .NET: success; build/tests: skipped por ausencia de solución/proyecto .NET.
 - No se afirma que tests de producto hayan pasado. Pendientes: incorporar código y pruebas reales, aprobar SDK/stack, habilitar Dependency Graph y revisar CI con evidencia por SHA. No se cambió main, Constitución, requisitos ni estados de arquitectura base; no hubo despliegue.
+
+## Corrección de conflictos y advertencias del PR #4 (2026-11-13)
+
+- Antes de modificar se comprobó el worktree limpio y se creó la referencia de respaldo `backup/fix-mark-api-devsecops-review-before-merge-2026-11-13` en `84e9564733a03323cefe1f683d5f795521fd5ac0`.
+- Se integró la rama `feature/sdd-azure-devsecops` en su HEAD remoto observado `0f05c07d099c8a4bb396719d804ec0698a29254a` a `fix/mark-api-devsecops-review` mediante merge normal. Merge local resultante: `5c2824e`. Conflictos resueltos en workflow CI, `global.json` y los proyectos Architecture/Contract. No se reescribió historia ni se tocó `main` o la rama de Mark.
+- Commit de correcciones de código: `c08f998` (`fix: validate backend inputs and dispose test content`). La actualización documental se confirmará por separado antes del push normal.
+- `global.json` fija `10.0.400` con `rollForward: disable`, única versión .NET 10 verificada instalada localmente. Los dos proyectos de pruebas conservan `coverlet.collector` una sola vez, con assets privados.
+- La revisión del merge detectó que el commit entrante removía checks de estado activo/revocación, rechazo de role en registro y pruebas de seguridad existentes. Se conservaron las protecciones del PR correctivo y sus regresiones automatizadas; esto requiere revisión de Mark.
+- Restore Release completado. Build con análisis completo: 0 errores y 186 advertencias de calidad/API. Se añadieron guardas CA1062 en controladores/repositorios y liberación CA2000 de tres `HttpContent`; el inventario por regla, archivo y prioridad está en `docs/ADVERTENCIAS_ANALISIS_CSHARP.md`. Quedan advertencias CA1031 y otras por revisar; CA1308 no se cambió sin prueba de regresión.
+- Suites locales: Architecture 2/2, Contract 3/3, Security 23/23 y Unit 29/29; Integration 10/13. Las otras 3 fallaron al iniciar Testcontainers porque Docker no está disponible en esta máquina. Total observado: 67 aprobadas y 3 bloqueadas por infraestructura de 70.
+- Gitleaks local 8.30.0 revisó 18 commits y no detectó secretos; NuGet Audit transitive encontró 0 advisories. CodeQL/Trivy no están instalados y Docker no está disponible.
+- La documentación actualizada está en `README.md`, `docs/VALIDACION_MARK.md`, `docs/ADVERTENCIAS_ANALISIS_CSHARP.md`, `docs/trazabilidad-ci-cd.md` y `specs/013-cicd-devsecops/`. El SHA documental/publicado, Actions, Gitleaks remoto y estado mergeable del PR quedan pendientes hasta empujar la rama.
+- No se cambió arquitectura base, Constitución ni tareas funcionales; no se usaron credenciales Atlas, no se desplegó a Azure y el PR #4 permanece sin fusionar.

@@ -23,3 +23,7 @@
 | CICD-T15 | Revisión final y cierre documental | T03-T14 | Matriz y aprobaciones | Pendiente |
 
 **Regla:** los pasos bloqueados no se habilitan mediante edición del texto, y no deben generarse secretos ni operaciones sobre la nube sin autorización.
+
+## Evidencia de revisión técnica (13/11/2026; sin cambiar estados de tareas)
+
+La rama correctiva integra mediante merge normal la rama de Mark en el SHA observado `0f05c07`; se resolvieron cuatro archivos en conflicto y se fijó SDK `10.0.400` comprobado localmente. El restore y build Release/análisis se ejecutaron; el build terminó con cero errores y 186 advertencias reportadas. Cuatro suites pasaron localmente (57 casos); Integration pasó 10/13 y 3 pruebas Mongo quedaron bloqueadas por falta de Docker. Gitleaks local y NuGet Audit no reportaron hallazgos/advisories. La evidencia detallada está en [VALIDACION_MARK.md](../../docs/VALIDACION_MARK.md). Esto no marca CICD-T06/T07 como cerradas: falta CI para el SHA actualizado, CodeQL/Trivy siguen pendientes y la revisión humana del PR continúa requerida. Se conservan los estados originales de tareas y la autoridad de aprobación.

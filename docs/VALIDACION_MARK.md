@@ -1,5 +1,36 @@
 # Validación técnica de la entrega de Mark
 
+## Actualización de conflictos y advertencias (13/11/2026)
+
+Esta sección es la evidencia más reciente y reemplaza para el estado actual los SHA y resultados históricos descritos más abajo; no borra su registro. Se creó la referencia local `backup/fix-mark-api-devsecops-review-before-merge-2026-11-13` antes de integrar cambios. La rama local comenzó en `84e9564733a03323cefe1f683d5f795521fd5ac0` y recibió mediante merge normal el HEAD vigente de Mark `0f05c07d099c8a4bb396719d804ec0698a29254a`. El merge quedó como `5c2824e` (primer padre 84e9564, segundo padre 0f05c07); el commit de correcciones de código es `c08f998`. No se modificó `main` ni la rama de Mark. La documentación de resultados y el push del PR están pendientes.
+
+| Control | Resultado local comprobado | Alcance / límite |
+|---|---|---|
+| Conflictos | Resueltos en `.github/workflows/ci.yml`, `global.json`, `Rutitas.ArchitectureTests.csproj` y `Rutitas.ContractTests.csproj`. | Se conservaron los cinco proyectos de test, Gitleaks, auditoría NuGet, análisis C#, TRX y Cobertura. Se mantuvo una referencia por paquete. |
+| SDK | `global.json` fija SDK `10.0.400`, presente localmente; `rollForward: disable`. | No se usa 10.0.401 porque no está instalado/verificado en este entorno. |
+| Restore | `dotnet restore Rutitas.Api/Rutitas.Api.slnx -p:NuGetAudit=true -p:NuGetAuditMode=all` terminó correctamente. | Sin credenciales de MongoDB Atlas. |
+| Build Release + análisis completo | Exit 0, 0 errores, 186 advertencias reportadas por MSBuild. | Inventario normalizado por archivo/regla/ubicación en [ADVERTENCIAS_ANALISIS_CSHARP.md](ADVERTENCIAS_ANALISIS_CSHARP.md). CodeQL y Trivy no están instalados; Docker tampoco. |
+| Suites Architecture / Contract / Security / Unit | 2/2, 3/3, 23/23 y 29/29 aprobadas. | Resultado de la ejecución local posterior a los cambios correctivos. |
+| Integration | 10/13 aprobadas; 3/13 fallaron al iniciar Testcontainers. | Bloqueo de infraestructura local: Docker no está instalado/en ejecución (`DockerUnavailableException`, pipe `docker_engine`). No se atribuye a fallo de la prueba ni se afirma suite completa aprobada. |
+| Conteo local | 67 aprobadas, 3 bloqueadas por falta de Docker, 70 en total. | GitHub Actions debe correr en Linux con Docker para confirmar las tres pruebas Mongo. |
+| Gitleaks | Gitleaks 8.30.0 local, escaneo del historial de 18 commits: sin hallazgos. | Falta comprobar el job remoto del SHA actualizado. |
+| Auditoría NuGet | 0 advisories en auditoría transitive de la solución. | Falta comprobar el job remoto del SHA actualizado. |
+| PR / Actions | PR #4 ya existente, abierto hacia `feature/sdd-azure-devsecops`; no se hizo merge. | El nuevo SHA aún no se ha publicado, por lo que no existe run CI asociado a esta actualización. Los runs anteriores no validan el merge nuevo. |
+
+### Conflictos y regresiones de seguridad revisadas
+
+Se conservaron las mejoras de la rama correctiva cuando el nuevo commit de Mark retiraba comprobaciones de cuenta activa y revocación, el rechazo de propiedades de rol no permitidas en registro, la prueba de fallo cerrado ante la caída del almacén de revocación y la prueba de rate limit en el detalle de ruta. Se verificó que las pruebas correspondientes siguen presentes; **Mark debe revisar este resultado** para confirmar su intención antes de aprobar el PR. Se conservaron también las referencias `coverlet.collector` únicas de Architecture y Contract.
+
+### Correcciones de advertencias realizadas
+
+- `CA1062`: se añadieron guardas de argumentos a acciones de `AuthController` y a constructores/métodos de los repositorios Mongo afectados. Las advertencias que quedan están en test fixtures y pruebas.
+- `CA2000`: se liberan mediante `using` los `HttpContent` de tres pruebas de regresión.
+- `CA1031`: permanecen cinco ubicaciones en `AuthController` y `Program.cs`; requieren validación contextual humana. No se suprimieron ni se reemplazaron globalmente.
+- `CA1308`: se dejó intacta la normalización de correo por falta de una prueba de regresión específica.
+- `CA2007`, `CA1707` y `CA2234`: siguen inventariadas; predominan ubicaciones de pruebas y no se aplicó una corrección masiva.
+
+Pendiente de completar tras el push: SHA final de la rama, ejecuciones GitHub Actions/Gitleaks para ese SHA, actualización del cuerpo del PR #4 y nuevo cotejo del estado mergeable.
+
 **Base examinada:** `feature/sdd-azure-devsecops` en `2cb6e016cf7e012e4b5f07e71ff330e0789694ae` (13/11/2026). **Correcciones:** rama independiente `fix/mark-api-devsecops-review`, PR hacia la rama de Mark. Este informe registra hechos técnicos; la Constitución, las decisiones de stack y la aceptación del contrato móvil siguen pendientes de aprobación humana.
 
 ## Alcance observado
