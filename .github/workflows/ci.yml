@@ -9,13 +9,14 @@ on:
 
 permissions:
   contents: read
+
 concurrency:
   group: backend-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   sdd-and-security:
-    name: SDD y escaneo de secretos (no compila API)
+    name: SDD, YAML y Gitleaks
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -38,14 +39,15 @@ jobs:
               specs/000-arquitectura-base/task.md; do
             test -s "$file" || { echo "::error::Falta o está vacío: $file"; exit 1; }
           done
-          echo 'SDD documental presente: NO equivale a Constitución ratificada.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'SDD documental presente; no equivale a Constitución ratificada.' >> "$GITHUB_STEP_SUMMARY"
       - name: Gitleaks (historial Git completo)
         run: >-
           docker run --rm --volume "$GITHUB_WORKSPACE:/repo:ro"
-          ghcr.io/gitleaks/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9 git --redact --exit-code 1 /repo
+          ghcr.io/gitleaks/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9
+          git --redact --exit-code 1 /repo
 
   detect-project:
-    name: Detectar solución o proyecto .NET
+    name: Detectar solución .NET
     runs-on: ubuntu-latest
     outputs:
       present: ${{ steps.detect.outputs.present }}
@@ -54,62 +56,54 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Detección de solución
+      - name: Detectar solución
         id: detect
         shell: bash
         run: |
           set -euo pipefail
           project="$(find . -type f \( -name '*.slnx' -o -name '*.sln' \) -not -path './.git/*' -print -quit)"
           if [ -z "$project" ]; then
-            project="$(find . -type f -name '*.csproj' -not -path './.git/*' -print -quit)"
+            echo '::error::No se encontró solución .NET.'
+            exit 1
           fi
-          if [ -z "$project" ]; then
-            echo 'present=false' >> "$GITHUB_OUTPUT"
-            echo 'No existe solución/proyecto .NET versionado; build y tests NO ejecutados.' >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo 'present=true' >> "$GITHUB_OUTPUT"
-            echo "project=${project#./}" >> "$GITHUB_OUTPUT"
-          fi
+          echo 'present=true' >> "$GITHUB_OUTPUT"
+          echo "project=${project#./}" >> "$GITHUB_OUTPUT"
 
-  dotnet-build:
-    name: .NET - restore, build y tests
+  dotnet-build-test:
+    name: .NET 10 - build, análisis, auditoría y cinco suites
     needs: [sdd-and-security, detect-project]
     if: needs.detect-project.outputs.present == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Exigir SDK definido para esta solución
-        shell: bash
-        run: test -s global.json || { echo '::error::Falta global.json; el SDK no se selecciona por inferencia.'; exit 1; }
-      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
+      - name: Instalar SDK verificado de global.json
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
           global-json-file: global.json
-      - name: Exigir proyecto de pruebas
-        shell: bash
-        run: |
-          set -euo pipefail
-          testproj="$(find . -type f \( -name '*Tests.csproj' -o -name '*Test.csproj' \) -print -quit)"
-          test -n "$testproj" || { echo '::error::No se encontró proyecto de pruebas .NET; CI incompleto'; exit 1; }
-      - name: Restaurar, compilar y ejecutar TODOS los proyectos de pruebas
-        shell: bash
+      - name: Restaurar con auditoría de NuGet
         env:
           PROJECT: ${{ needs.detect-project.outputs.project }}
+        run: dotnet restore "$PROJECT" -p:NuGetAudit=true -p:NuGetAuditMode=all
+      - name: Compilar Release
+        env:
+          PROJECT: ${{ needs.detect-project.outputs.project }}
+        run: dotnet build "$PROJECT" --configuration Release --no-restore
+      - name: Analizar C# con todos los analizadores .NET
+        env:
+          PROJECT: ${{ needs.detect-project.outputs.project }}
+        run: >-
+          dotnet build "$PROJECT" --configuration Release --no-restore --no-incremental
+          -p:EnableNETAnalyzers=true -p:AnalysisMode=All -p:RunAnalyzersDuringBuild=true
+      - name: Auditar vulnerabilidades NuGet directas y transitivas
+        env:
+          PROJECT: ${{ needs.detect-project.outputs.project }}
+        shell: bash
         run: |
           set -euo pipefail
-          dotnet restore "$PROJECT" -p:NuGetAudit=true -p:NuGetAuditMode=all
-          dotnet build "$PROJECT" --configuration Release --no-restore
-
-          # El análisis de código produce diagnósticos revisables; su umbral
-          # de bloqueo se aprobará tras clasificar la línea base.
-          dotnet build "$PROJECT" --configuration Release --no-restore --no-incremental \
-            -p:EnableNETAnalyzers=true -p:AnalysisMode=All \
-            -p:RunAnalyzersDuringBuild=true
-
-          dotnet package list --project "$PROJECT" --vulnerable \
-            --include-transitive --format json > nuget-vulnerabilities.json
+          dotnet package list --project "$PROJECT" --vulnerable --include-transitive --format json > nuget-vulnerabilities.json
           python3 - <<'PY'
           import json
           data = json.load(open('nuget-vulnerabilities.json', encoding='utf-8'))
@@ -128,37 +122,36 @@ jobs:
           if count:
               raise SystemExit('Revisar vulnerabilidades NuGet antes de integrar.')
           PY
-
-          # Probar explícitamente los proyectos de test; dotnet test sobre una API
-          # no garantiza ejecutar tests cuando no hay un .sln/.slnx.
+      - name: Ejecutar exactamente cinco suites con TRX y Cobertura
+        shell: bash
+        run: |
+          set -euo pipefail
           mapfile -d '' test_projects < <(
-            find . -type f \
-              \( -name '*Tests.csproj' -o -name '*Test.csproj' \) \
-              -not -path './.git/*' -print0
+            find Rutitas.Api/tests -type f -name '*Tests.csproj' -not -path './.git/*' -print0 | sort -z
           )
-          if (( ${#test_projects[@]} == 0 )); then
-            echo '::error::No existen proyectos de tests verificables.'
-            exit 1
-          fi
           if (( ${#test_projects[@]} != 5 )); then
             echo "::error::Se esperaban cinco proyectos de pruebas; se encontraron ${#test_projects[@]}."
             exit 1
           fi
-          for test_project in "${test_projects[@]}"; do
-            echo "::group::Ejecutando tests: $test_project"
-            dotnet test "$test_project" --configuration Release \
-              --no-restore --logger 'trx;LogFileName=test-results.trx' \
-              --collect 'XPlat Code Coverage'
-            echo '::endgroup::'
+          mkdir -p test-results
+          for project in "${test_projects[@]}"; do
+            name="$(basename "$project" .csproj)"
+            result_dir="test-results/$name"
+            mkdir -p "$result_dir"
+            echo "::group::Ejecutando $name"
+            dotnet test "$project" --configuration Release --no-build --no-restore \
+              --logger "trx;LogFileName=$name.trx" --results-directory "$result_dir" \
+              --collect:"XPlat Code Coverage"
+            echo "::endgroup::"
           done
-      - name: Conservar reportes
+      - name: Conservar TRX y cobertura
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: dotnet-test-results
           path: |
-            **/TestResults/**/*.trx
-            **/TestResults/**/coverage.cobertura.xml
+            test-results/**/*.trx
+            test-results/**/coverage.cobertura.xml
           if-no-files-found: error
           retention-days: 14
       - name: Conservar auditoría NuGet
