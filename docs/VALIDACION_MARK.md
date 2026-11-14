@@ -30,7 +30,7 @@
 - NuGet audit remoto: 0 advisories. Build normal: 0 warnings/errores. Análisis completo: 186 warnings/0 errores. Gitleaks remoto: success.
 - `actions/setup-dotnet` leyó `global.json` con `rollForward: latestPatch`; el log del runner indica que seleccionó/ya tenía SDK `10.0.404` en la feature band 10.0.4xx. El equipo local solo tiene instalado `10.0.400`; `10.0.401` exacto no se ejecutó en ninguno de estos entornos y no se declara verificado.
 
-No se cambió el PR de destino, `main` ni la rama de Mark. La actualización documental pendiente se publicará por separado y validará nuevamente el mismo código.
+La actualización documental quedó publicada en `5247fdb472c632b9a762d765ba905002092bd568`; su [run 43543616458](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43543616458) también pasó los tres jobs y las cinco suites. El PR #4 continúa abierto y sin merge, dirigido a la rama de Mark en SHA `0f05c07`. No se cambió `main` ni la rama de Mark.
 
 ## Actualización de conflictos y advertencias (13/11/2026)
 
