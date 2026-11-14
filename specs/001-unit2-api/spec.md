@@ -1,6 +1,6 @@
 # Especificación funcional — API Unidad II
 
-> **CONCILIACIÓN TÉCNICA — 11/11/2026:** Hay implementación local de las siete operaciones y el usuario reportó **63/63 pruebas aprobadas** tras iniciar Docker. Esta es evidencia técnica local, **no** aprobación formal del Gate 0, del contrato móvil ni del despliegue. Los campos **Decisión / Ejecución / Verificación** del encabezado y la tabla de tareas describen el *registro SDD original*, que no ha sido actualizado mediante acta de autorización. La implementación real usa `PasswordHasher<User>` y filtra rutas con `Status="active"` y `Visibility="public"`; referencias a Argon2id o `isActive` en el diseño son propuestas históricas, no afirmaciones sobre el código. Consultar [estado real](../../docs/ESTADO_REAL_BACKEND.md) y [brechas](../../docs/BRECHAS_FASE1_11NOV2026.md).
+> **Estado técnico revisado — 13/11/2026:** La rama de Mark contiene las siete operaciones. El reporte de **63/63** es histórico y local; no hay evidencia CI de ese número para el SHA revisado. El registro SDD original conserva sus estados de decisión y aprobación pendientes. La implementación observada usa `PasswordHasher<User>` y filtros `Status="active"`, `Visibility="public"`. Véanse [validación técnica](../../docs/VALIDACION_MARK.md) y [compatibilidad Android](../../docs/COMPATIBILIDAD_ANDROID.md).
 
 **ID:** SPEC-U2-API  
 **Decisión:** `propuesto` · **Ejecución:** `no_iniciado` · **Verificación:** `no_ejecutada` · **Tipo:** `experimental`  
@@ -46,10 +46,10 @@ Incluye:
 
 - [Constitución del proyecto](../../.specify/memory/constitution.md), [AGENTS](../../AGENTS.md) y [arquitectura base](../000-arquitectura-base/spec.md).
 - Instrucción de Unidad II comunicada por el usuario; fuente primaria pendiente.
-- Stack propuesto: ASP.NET Core 10/C#, MongoDB y JWT ([ADR-001](../../docs/ADR-001-stack.md); `BACKEND-D05`).
+- Stack presente en código: ASP.NET Core 10/C#, MongoDB y JWT; su aprobación sigue pendiente (`BACKEND-D05` en [decisiones pendientes](../../docs/decisiones-pendientes.md)). No existe `ADR-001-stack.md` ratificado.
 - Contrato con cliente móvil (Kotlin propuesto; `BACKEND-D06`, `BACKEND-D13`).
 - Nube sin seleccionar (`BACKEND-D09`); no se crean recursos.
-- Aprobación y roles propuestos: [APR-U2-001](../../docs/APR-U2-001.md).
+- Aprobación y roles: pendientes según [decisiones pendientes](../../docs/decisiones-pendientes.md). No existe acta `APR-U2-001` en este repositorio.
 
 **Supuestos:** no existe implementación previa de esta API; el entorno local usa MongoDB de desarrollo; los datos de rutas son sintéticos; la autorización se valida en el servidor.
 

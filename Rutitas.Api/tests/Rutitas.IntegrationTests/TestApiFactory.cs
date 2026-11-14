@@ -49,8 +49,9 @@ public sealed class FakeUsers : IUserRepository
 public sealed class FakeRevocations : ITokenRevocationRepository
 {
     private readonly HashSet<string> _revoked=new();
+    public bool FailOnRead { get; set; }
     public Task RevokeAsync(string jti,DateTime expiresAt,CancellationToken ct=default){lock(_revoked)_revoked.Add(jti);return Task.CompletedTask;}
-    public Task<bool> IsRevokedAsync(string jti,CancellationToken ct=default){lock(_revoked)return Task.FromResult(_revoked.Contains(jti));}
+    public Task<bool> IsRevokedAsync(string jti,CancellationToken ct=default){if(FailOnRead)throw new InvalidOperationException("Synthetic MongoDB failure");lock(_revoked)return Task.FromResult(_revoked.Contains(jti));}
 }
 public sealed class FakeRoutes : IRouteRepository
 {

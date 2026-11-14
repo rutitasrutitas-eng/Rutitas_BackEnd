@@ -1,6 +1,6 @@
 # Plan técnico — API Unidad II
 
-> **CONCILIACIÓN TÉCNICA — 11/11/2026:** Hay implementación local de las siete operaciones y el usuario reportó **63/63 pruebas aprobadas** tras iniciar Docker. Esta es evidencia técnica local, **no** aprobación formal del Gate 0, del contrato móvil ni del despliegue. Los campos **Decisión / Ejecución / Verificación** del encabezado y la tabla de tareas describen el *registro SDD original*, que no ha sido actualizado mediante acta de autorización. La implementación real usa `PasswordHasher<User>` y filtra rutas con `Status="active"` y `Visibility="public"`; referencias a Argon2id o `isActive` en el diseño son propuestas históricas, no afirmaciones sobre el código. Consultar [estado real](../../docs/ESTADO_REAL_BACKEND.md) y [brechas](../../docs/BRECHAS_FASE1_11NOV2026.md).
+> **Estado técnico revisado — 13/11/2026:** La API y cinco proyectos de pruebas están presentes. Las 63 pruebas comunicadas son evidencia local histórica, no un resultado de CI en el SHA de Mark. Los estados SDD originales de decisión/aprobación siguen pendientes. Véanse [validación técnica](../../docs/VALIDACION_MARK.md) y [compatibilidad Android](../../docs/COMPATIBILIDAD_ANDROID.md).
 
 **ID:** PLAN-U2-API  
 **Decisión:** `propuesto` · **Ejecución:** `no_iniciado` · **Verificación:** `no_ejecutada` · **Tipo:** `experimental`  
@@ -22,7 +22,7 @@
 
 Dependencias NuGet candidatas: `MongoDB.Driver`, `Microsoft.AspNetCore.Authentication.JwtBearer`, `Microsoft.AspNetCore.OpenApi` o `Swashbuckle.AspNetCore`, `Asp.Versioning.Mvc`, `Serilog.AspNetCore`, `FluentValidation.AspNetCore` (o DataAnnotations), `OpenTelemetry.*` y paquetes de prueba. Ninguna se considera aprobada hasta el ADR.
 
-La propuesta se detalla en [ADR-001-stack](../../docs/ADR-001-stack.md); el registro de aprobación y los roles están en [APR-U2-001](../../docs/APR-U2-001.md).
+La tecnología observada requiere una decisión `BACKEND-D05` y aprobación de roles documentada en [decisiones pendientes](../../docs/decisiones-pendientes.md). No existen `ADR-001-stack.md` ni `APR-U2-001.md` ratificados en este repositorio.
 
 ## 2. Arquitectura propuesta
 

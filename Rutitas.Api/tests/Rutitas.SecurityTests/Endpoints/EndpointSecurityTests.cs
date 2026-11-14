@@ -45,7 +45,8 @@ public class EndpointSecurityTests
     {
         using var factory=new TestApiFactory();using var client=factory.CreateClient();
         await Authenticate(client);
-        var response=await client.PatchAsync("/api/v1/users/me",new StringContent("{\"role\":\"admin\"}",Encoding.UTF8,"application/json"));
+        using var content=new StringContent("{\"role\":\"admin\"}",Encoding.UTF8,"application/json");
+        var response=await client.PatchAsync("/api/v1/users/me",content);
         Assert.Equal(HttpStatusCode.BadRequest,response.StatusCode);
         var profile=await client.GetAsync("/api/v1/users/me");
         using var doc=JsonDocument.Parse(await profile.Content.ReadAsStringAsync());

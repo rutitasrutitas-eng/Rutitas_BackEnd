@@ -1,5 +1,7 @@
 # 013 — Tareas CI/CD DevSecOps
 
+> **Cotejo 13/11/2026:** la tabla conserva las tareas propuestas originales. La rama correctiva implementa preparación de CI, pero cada tarea sólo se verificará con el run del SHA exacto y revisión humana. Véase [validación técnica](../../docs/VALIDACION_MARK.md).
+
 **Decisión:** propuesto · **Ejecución:** no_iniciado · **Verificación:** no_ejecutada.
 
 | ID | Tarea | Dependencias | Evidencia de cierre | Estado |
@@ -21,3 +23,7 @@
 | CICD-T15 | Revisión final y cierre documental | T03-T14 | Matriz y aprobaciones | Pendiente |
 
 **Regla:** los pasos bloqueados no se habilitan mediante edición del texto, y no deben generarse secretos ni operaciones sobre la nube sin autorización.
+
+## Evidencia de revisión técnica (13/11/2026; sin cambiar estados de tareas)
+
+La rama correctiva integra mediante merge normal la rama de Mark en el SHA observado `0f05c07`; se resolvieron cuatro archivos en conflicto y se fijó SDK `10.0.400` comprobado localmente. El restore y build Release/análisis se ejecutaron; el build terminó con cero errores y 186 advertencias reportadas. Localmente, cuatro suites pasaron (57 casos); Integration pasó 10/13 y 3 pruebas Mongo quedaron bloqueadas por falta de Docker. GitHub Actions run [43537627859](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43537627859) verificó las cinco suites: 70/70, sin fallos ni omisiones; Gitleaks pasó y NuGet Audit reportó 0 advisories. La evidencia detallada está en [VALIDACION_MARK.md](../../docs/VALIDACION_MARK.md). Esto no cierra formalmente CICD-T06/T07: CodeQL/Trivy siguen pendientes y la revisión humana del PR continúa requerida. Se conservan los estados originales de tareas y la autoridad de aprobación.

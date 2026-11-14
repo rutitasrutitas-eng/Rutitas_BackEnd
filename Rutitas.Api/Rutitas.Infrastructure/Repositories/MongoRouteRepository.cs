@@ -16,6 +16,7 @@ public sealed class MongoRouteRepository : IRouteRepository
 
     public MongoRouteRepository(IMongoDatabase database)
     {
+        ArgumentNullException.ThrowIfNull(database);
         _routes = database.GetCollection<Route>("routes");
     }
 
@@ -82,6 +83,7 @@ public sealed class MongoRouteRepository : IRouteRepository
         string id,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(id);
         if (!ObjectId.TryParse(id, out _))
         {
             return null;

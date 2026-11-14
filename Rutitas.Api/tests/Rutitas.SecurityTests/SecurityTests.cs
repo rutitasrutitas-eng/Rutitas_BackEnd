@@ -26,12 +26,14 @@ public class SecurityTests
     [Fact] public async Task EscalationByMassAssignment_IsRejected()
     {
         using var app=new TestApiFactory();using var client=app.CreateClient();
-        Assert.Equal(HttpStatusCode.Created,(await client.PostAsJsonAsync("/api/v1/auth/register",new {email="alumno@example.com",password="ValidPassword123!",displayName="Alumno",role="admin"})).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest,(await client.PostAsJsonAsync("/api/v1/auth/register",new {email="alumno@example.com",password="ValidPassword123!",displayName="Alumno",role="admin"})).StatusCode);
+        Assert.Equal(HttpStatusCode.Created,(await client.PostAsJsonAsync("/api/v1/auth/register",new {email="alumno@example.com",password="ValidPassword123!",displayName="Alumno"})).StatusCode);
         var login=await client.PostAsJsonAsync("/api/v1/auth/login",new {email="alumno@example.com",password="ValidPassword123!"});
         using var doc=JsonDocument.Parse(await login.Content.ReadAsStringAsync());
         Assert.Equal("user",doc.RootElement.GetProperty("user").GetProperty("role").GetString());
         client.DefaultRequestHeaders.Authorization=new AuthenticationHeaderValue("Bearer",doc.RootElement.GetProperty("accessToken").GetString());
-        var response=await client.PatchAsync("/api/v1/users/me",new StringContent("{\"role\":\"admin\"}",Encoding.UTF8,"application/json"));
+        using var content=new StringContent("{\"role\":\"admin\"}",Encoding.UTF8,"application/json");
+        var response=await client.PatchAsync("/api/v1/users/me",content);
         Assert.Equal(HttpStatusCode.BadRequest,response.StatusCode);
     }
     [Theory][InlineData("?page=0")][InlineData("?pageSize=101")]
@@ -60,5 +62,17 @@ public class SecurityTests
         var response=await client.PostAsJsonAsync("/api/v1/auth/login",new {email="alumno@example.com",password="WrongPassword123!"});
         Assert.Equal(HttpStatusCode.Unauthorized,response.StatusCode);
         Assert.DoesNotContain("SigningKey",await response.Content.ReadAsStringAsync(),StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact] public async Task RouteDetailRateLimit_RejectsExcessRequests()
+    {
+        using var app=new TestApiFactory();using var client=app.CreateClient();
+        await client.PostAsJsonAsync("/api/v1/auth/register",new {email="alumno@example.com",password="ValidPassword123!",displayName="Alumno"});
+        var login=await client.PostAsJsonAsync("/api/v1/auth/login",new {email="alumno@example.com",password="ValidPassword123!"});
+        using var doc=JsonDocument.Parse(await login.Content.ReadAsStringAsync());
+        client.DefaultRequestHeaders.Authorization=new AuthenticationHeaderValue("Bearer",doc.RootElement.GetProperty("accessToken").GetString());
+        HttpStatusCode last=HttpStatusCode.OK;
+        for(var i=0;i<61;i++) last=(await client.GetAsync("/api/v1/routes/507f1f77bcf86cd799439012")).StatusCode;
+        Assert.Equal(HttpStatusCode.TooManyRequests,last);
     }
 }

@@ -107,6 +107,7 @@ public sealed class RoutesController : ControllerBase
     // ========================================
 
     [HttpGet("{id}")]
+    [EnableRateLimiting("routes")]
     public async Task<IActionResult> GetRouteById(
         string id,
         CancellationToken cancellationToken)
