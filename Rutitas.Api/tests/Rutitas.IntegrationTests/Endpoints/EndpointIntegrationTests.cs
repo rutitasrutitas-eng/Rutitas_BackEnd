@@ -61,7 +61,8 @@ public class EndpointIntegrationTests
     {
         using var factory = new TestApiFactory(); using var client = factory.CreateClient();
         await Authenticate(client);
-        var response = await client.PatchAsync("/api/v1/users/me",new StringContent("{\"displayName\":\"Nombre Actualizado\"}",Encoding.UTF8,"application/json"));
+        using var content = new StringContent("{\"displayName\":\"Nombre Actualizado\"}",Encoding.UTF8,"application/json");
+        var response = await client.PatchAsync("/api/v1/users/me", content);
         Assert.Equal(HttpStatusCode.OK,response.StatusCode);
         using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         Assert.Equal("Nombre Actualizado",doc.RootElement.GetProperty("displayName").GetString());

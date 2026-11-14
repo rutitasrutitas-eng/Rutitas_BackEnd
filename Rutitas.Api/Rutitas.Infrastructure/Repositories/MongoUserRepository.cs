@@ -13,6 +13,7 @@ public class MongoUserRepository : IUserRepository
 
     public MongoUserRepository(IMongoDatabase database)
     {
+        ArgumentNullException.ThrowIfNull(database);
         _users = database.GetCollection<User>("users");
     }
 
@@ -42,6 +43,7 @@ public class MongoUserRepository : IUserRepository
         string email,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(email);
         var normalizedEmail = email.Trim().ToLowerInvariant();
 
         return await _users
@@ -57,6 +59,7 @@ public class MongoUserRepository : IUserRepository
         User user,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(user);
         user.Id = ObjectId.GenerateNewId().ToString();
 
         user.Email = user.Email.Trim().ToLowerInvariant();
@@ -84,6 +87,7 @@ public class MongoUserRepository : IUserRepository
         User user,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(user);
         if (!ObjectId.TryParse(user.Id, out _))
         {
             throw new ArgumentException(

@@ -13,6 +13,7 @@ public sealed class MongoTokenRevocationRepository
     public MongoTokenRevocationRepository(
         IMongoDatabase database)
     {
+        ArgumentNullException.ThrowIfNull(database);
         _tokens = database.GetCollection<RevokedToken>(
             "revoked_tokens");
     }

@@ -50,6 +50,7 @@ public sealed class AuthController : ControllerBase
         [FromBody] RegisterRequest request,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
         var errors = new Dictionary<string, string[]>();
 
         var email =
@@ -171,6 +172,7 @@ public sealed class AuthController : ControllerBase
         [FromBody] LoginRequest request,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
         var email =
             request.Email?.Trim().ToLowerInvariant() ?? "";
 

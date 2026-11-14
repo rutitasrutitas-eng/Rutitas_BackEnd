@@ -32,7 +32,8 @@ public class SecurityTests
         using var doc=JsonDocument.Parse(await login.Content.ReadAsStringAsync());
         Assert.Equal("user",doc.RootElement.GetProperty("user").GetProperty("role").GetString());
         client.DefaultRequestHeaders.Authorization=new AuthenticationHeaderValue("Bearer",doc.RootElement.GetProperty("accessToken").GetString());
-        var response=await client.PatchAsync("/api/v1/users/me",new StringContent("{\"role\":\"admin\"}",Encoding.UTF8,"application/json"));
+        using var content=new StringContent("{\"role\":\"admin\"}",Encoding.UTF8,"application/json");
+        var response=await client.PatchAsync("/api/v1/users/me",content);
         Assert.Equal(HttpStatusCode.BadRequest,response.StatusCode);
     }
     [Theory][InlineData("?page=0")][InlineData("?pageSize=101")]
