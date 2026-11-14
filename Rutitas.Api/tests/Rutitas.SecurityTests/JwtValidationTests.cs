@@ -75,23 +75,32 @@ public sealed class JwtValidationTests
     {
         using var app = new TestApiFactory();
         using var client = app.CreateClient();
-        var (validToken, _) = await RegisterAndLogin(client);
+        var (_, userId) = await RegisterAndLogin(client);
+        var configuration = app.Services.GetRequiredService<IConfiguration>();
+        var validControlToken = SignedToken(configuration,
+        [
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
+        ]);
 
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", validToken);
+            new AuthenticationHeaderValue("Bearer", validControlToken);
         Assert.Equal(HttpStatusCode.OK,
             (await client.GetAsync(new Uri("/api/v1/routes", UriKind.Relative))).StatusCode);
 
-        var configuration = app.Services.GetRequiredService<IConfiguration>();
+        var jti = Guid.NewGuid().ToString("N");
         var tokenWithoutSubject = SignedToken(configuration,
         [
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
+            new Claim(JwtRegisteredClaimNames.Jti, jti)
         ]);
         var decodedToken = new JwtSecurityTokenHandler().ReadJwtToken(tokenWithoutSubject);
+        Assert.Equal(configuration["Jwt:Issuer"], decodedToken.Issuer);
+        Assert.Equal(configuration["Jwt:Audience"], Assert.Single(decodedToken.Audiences));
+        Assert.True(decodedToken.ValidTo > DateTime.UtcNow);
         Assert.DoesNotContain(decodedToken.Claims,
             claim => claim.Type == JwtRegisteredClaimNames.Sub);
         Assert.Contains(decodedToken.Claims,
-            claim => claim.Type == JwtRegisteredClaimNames.Jti);
+            claim => claim.Type == JwtRegisteredClaimNames.Jti && claim.Value == jti);
 
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", tokenWithoutSubject);
