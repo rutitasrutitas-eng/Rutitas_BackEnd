@@ -29,7 +29,17 @@ Se conservaron las mejoras de la rama correctiva cuando el nuevo commit de Mark 
 - `CA1308`: se dejó intacta la normalización de correo por falta de una prueba de regresión específica.
 - `CA2007`, `CA1707` y `CA2234`: siguen inventariadas; predominan ubicaciones de pruebas y no se aplicó una corrección masiva.
 
-Pendiente de completar tras el push: SHA final de la rama, ejecuciones GitHub Actions/Gitleaks para ese SHA, actualización del cuerpo del PR #4 y nuevo cotejo del estado mergeable.
+### GitHub Actions y estado remoto del commit `f03bdf2`
+
+- Head publicado: `f03bdf2c1ebd50f8d830c9eeaf788e084d87837d`.
+- Run [43537627859](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43537627859): **success**, con 3 jobs aprobados: detección .NET, SDD/YAML/Gitleaks y .NET 10 (restore, build, análisis, NuGet, cinco suites y artefactos).
+- Suites de CI: Architecture 2/2, Contract 3/3, Integration 13/13, Security 23/23 y Unit 29/29 = **70/70**, 0 fallidas y 0 omitidas. Las pruebas Mongo/Testcontainers sí corrieron en el runner Linux.
+- Gitleaks de historial completo: success. NuGet transitive audit: **0 advisories**. YAML, validación SDD, restore, build normal, análisis C# y publicación de artefactos TRX/Cobertura/JSON: success.
+- Análisis `AnalysisMode=All`: 186 advertencias, 0 errores; inventario en [ADVERTENCIAS_ANALISIS_CSHARP.md](ADVERTENCIAS_ANALISIS_CSHARP.md). Las cifras locales de test difieren solo por falta de Docker en Windows; CI es la verificación integral.
+- Artefactos [TRX y Cobertura](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43537627859/artifacts/14090023278) y [auditoría NuGet](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43537627859/artifacts/14090457341).
+- GitHub confirmó el PR #4 **abierto, sin fusionar y mergeable** contra `feature/sdd-azure-devsecops`, cuyo SHA continúa `0f05c07d099c8a4bb396719d804ec0698a29254a`. El SHA de merge de prueba generado por GitHub no se ha integrado en la rama destino.
+
+El cuerpo del PR se actualizará con esta evidencia. Mark aún debe revisar y aprobar el mantenimiento de las comprobaciones de seguridad indicadas arriba. CodeQL y Trivy siguen pendientes/no disponibles localmente; no se desplegó a Azure ni se modificó `main`.
 
 **Base examinada:** `feature/sdd-azure-devsecops` en `2cb6e016cf7e012e4b5f07e71ff330e0789694ae` (13/11/2026). **Correcciones:** rama independiente `fix/mark-api-devsecops-review`, PR hacia la rama de Mark. Este informe registra hechos técnicos; la Constitución, las decisiones de stack y la aceptación del contrato móvil siguen pendientes de aprobación humana.
 
