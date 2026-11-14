@@ -6,8 +6,8 @@ Este anexo registra trabajo técnico de una rama de revisión; no ratifica la Co
 
 | Elemento / control | Cambio o evidencia | Estado y límite |
 |---|---|---|
-| Rama correctiva | `fix/mark-api-devsecops-review`; respaldo local previo en `backup/fix-mark-api-devsecops-review-before-merge-2026-11-13`; merge normal de `84e9564` con el HEAD de Mark `0f05c07`, resultado `5c2824e`; commit correctivo de código `c08f998`; SHA con CI ya verificado `f03bdf2`. | Rama publicada con push normal; PR #4 permanece abierto y sin fusionar. No se modifica `main` ni la rama de Mark. |
-| CI / YAML | `.github/workflows/ci.yml` conserva PR hacia `main` y `feature/sdd-azure-devsecops`, push correctivo, `workflow_dispatch`, SDD, Gitleaks, análisis, NuGet, cinco suites, TRX y Cobertura. | Run [43537627859](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43537627859), SHA `f03bdf2`: tres jobs success, incluyendo parseo YAML y SDD. |
+| Rama correctiva | `fix/mark-api-devsecops-review`; respaldo local previo en `backup/fix-mark-api-devsecops-review-before-merge-2026-11-13`; merge normal de `84e9564` con el HEAD de Mark `0f05c07`, resultado `5c2824e`; commit correctivo de código `c08f998`; SHA de documentación `e6ad72b`. | Rama publicada con push normal; PR #4 permanece abierto y sin fusionar. No se modifica `main` ni la rama de Mark. |
+| CI / YAML | `.github/workflows/ci.yml` conserva PR hacia `main` y `feature/sdd-azure-devsecops`, push correctivo, `workflow_dispatch`, SDD, Gitleaks, análisis, NuGet, cinco suites, TRX y Cobertura. | Run [43537627859](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43537627859), SHA `f03bdf2`, y run [43538064486](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43538064486), SHA `e6ad72b`: ambos con tres jobs success, incluyendo parseo YAML y SDD. |
 | SDK | `global.json`: .NET SDK `10.0.400`, `rollForward: disable`. | Verificado instalado localmente; 10.0.401 no está instalado. |
 | CA1062 | Guardas de entrada en `AuthController` y repositorios Mongo. | Corregido en código productivo objetivo; ubicaciones restantes son fixtures/pruebas. |
 | CA2000 | Tres `HttpContent` de pruebas ahora usan liberación determinista. | Sin ubicaciones restantes en el análisis completo. |
@@ -17,7 +17,7 @@ Este anexo registra trabajo técnico de una rama de revisión; no ratifica la Co
 | SAST / imagen | CodeQL, Trivy y Docker no están disponibles localmente. | Pendiente; no se publicaron imágenes ni se desplegó. |
 | Riesgo merge | Se conservaron los checks de usuario activo/revocación, control de role y pruebas de rate limit que se retiraban en el commit entrante. | Mark debe revisar y confirmar la intención del cambio antes de aprobar. |
 
-El desglose actualizado de diagnóstico por regla/archivo/prioridad está en [ADVERTENCIAS_ANALISIS_CSHARP.md](ADVERTENCIAS_ANALISIS_CSHARP.md); los resultados operativos y bloqueos están en [VALIDACION_MARK.md](VALIDACION_MARK.md). La ejecución de tareas SDD permanece sujeta a su autoridad y aprobación humanas.
+El desglose actualizado de diagnóstico por regla/archivo/prioridad está en [ADVERTENCIAS_ANALISIS_CSHARP.md](ADVERTENCIAS_ANALISIS_CSHARP.md); los resultados operativos y bloqueos están en [VALIDACION_MARK.md](VALIDACION_MARK.md). La actualización del PR mediante edición/comentario fue rechazada por GitHub con HTTP 403 `Resource not accessible by integration`; el límite queda registrado en el reporte y no se eludió. La ejecución de tareas SDD permanece sujeta a su autoridad y aprobación humanas.
 
 ## Corrección para revisión de Mark (13/11/2026)
 
