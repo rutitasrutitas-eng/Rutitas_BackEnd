@@ -1,5 +1,13 @@
 # Memoria de trabajo — Rutitas Backend
 
+## Revisión independiente de la entrega de Mark (13/11/2026)
+
+- Se confirmó en GitHub que `feature/sdd-azure-devsecops` apunta a `2cb6e016cf7e012e4b5f07e71ff330e0789694ae`; `main` apunta a `cc3be2ddbdb837fd9aa6c4a2a68d0ced3028ae11`. No había PR abierto para la rama de Mark al iniciar. La corrección se prepara en `fix/mark-api-devsecops-review`, dirigida a la rama de Mark, sin modificarla directamente.
+- La solución contiene API real y cinco proyectos de pruebas. Se restauró con SDK 10.0.400 y se compiló en Release con cero advertencias y errores, también en una copia temporal. Windows Control de aplicaciones bloqueó la carga de DLL (`0x800711C7`) tanto desde OneDrive como desde `%LOCALAPPDATA%\Temp`; Architecture produjo TRX con 2 fallos de carga. Se buscará evidencia de CI por SHA; no se atribuyen a CI las 63 pruebas históricas.
+- Se detectó acceso a rutas con JWT de usuario inactivo y aceptación silenciosa de `role` en registro; se prepararon correcciones y pruebas negativas. `global.json`, triggers, TRX y cobertura se alinean para revisión. Véanse [informe técnico](docs/VALIDACION_MARK.md) y [compatibilidad Android](docs/COMPATIBILIDAD_ANDROID.md).
+- La Constitución, el contrato entre equipos, el stack y decisiones Azure siguen pendientes de aprobación humana. Esta memoria registra implementación y pruebas observadas, no una ratificación.
+- El run [43464562923](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43464562923) del SHA `77d3e1e` aprobó 69/69 pruebas en cinco suites, incluidos tres casos Mongo/Testcontainers; build Release sin advertencias, SDD y Gitleaks correctos, NuGet con 0 advisories. Publicó TRX y Cobertura XML. Un cambio posterior de rate limiting/análisis requiere run propio antes de atribuirle estos resultados.
+
 **Estado:** preparación documental para revisión docente. Constitución y AGENTS propuestos, **no ratificados**.
 
 **Origen:** separación del paquete conjunto `Proyecto Rutitas.zip` entregado para esta tarea.
@@ -97,3 +105,32 @@ Fuentes detalladas: [documentos consultados](docs/fuentes-consultadas.md). Estad
 - PR #3: https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/pull/3, abierto hacia main y sin fusionar.
 - Actions PR run: https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43081375095. Validación YAML, SDD y Gitleaks: success; detección .NET: success; build/tests: skipped por ausencia de solución/proyecto .NET.
 - No se afirma que tests de producto hayan pasado. Pendientes: incorporar código y pruebas reales, aprobar SDK/stack, habilitar Dependency Graph y revisar CI con evidencia por SHA. No se cambió main, Constitución, requisitos ni estados de arquitectura base; no hubo despliegue.
+
+## Corrección de conflictos y advertencias del PR #4 (2026-11-13)
+
+- Antes de modificar se comprobó el worktree limpio y se creó la referencia de respaldo `backup/fix-mark-api-devsecops-review-before-merge-2026-11-13` en `84e9564733a03323cefe1f683d5f795521fd5ac0`.
+- Se integró la rama `feature/sdd-azure-devsecops` en su HEAD remoto observado `0f05c07d099c8a4bb396719d804ec0698a29254a` a `fix/mark-api-devsecops-review` mediante merge normal. Merge local resultante: `5c2824e`. Conflictos resueltos en workflow CI, `global.json` y los proyectos Architecture/Contract. No se reescribió historia ni se tocó `main` o la rama de Mark.
+- Commit de correcciones de código: `c08f998` (`fix: validate backend inputs and dispose test content`). La actualización documental se confirmará por separado antes del push normal.
+- `global.json` fija `10.0.400` con `rollForward: disable`, única versión .NET 10 verificada instalada localmente. Los dos proyectos de pruebas conservan `coverlet.collector` una sola vez, con assets privados.
+- La revisión del merge detectó que el commit entrante removía checks de estado activo/revocación, rechazo de role en registro y pruebas de seguridad existentes. Se conservaron las protecciones del PR correctivo y sus regresiones automatizadas; esto requiere revisión de Mark.
+- Restore Release completado. Build con análisis completo: 0 errores y 186 advertencias de calidad/API. Se añadieron guardas CA1062 en controladores/repositorios y liberación CA2000 de tres `HttpContent`; el inventario por regla, archivo y prioridad está en `docs/ADVERTENCIAS_ANALISIS_CSHARP.md`. Quedan advertencias CA1031 y otras por revisar; CA1308 no se cambió sin prueba de regresión.
+- Suites locales: Architecture 2/2, Contract 3/3, Security 23/23 y Unit 29/29; Integration 10/13. Las otras 3 fallaron al iniciar Testcontainers porque Docker no está disponible en esta máquina. Total observado: 67 aprobadas y 3 bloqueadas por infraestructura de 70.
+- Gitleaks local 8.30.0 revisó 18 commits y no detectó secretos; NuGet Audit transitive encontró 0 advisories. CodeQL/Trivy no están instalados y Docker no está disponible.
+- GitHub Actions [run 43537627859](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43537627859) para `f03bdf2c1ebd50f8d830c9eeaf788e084d87837d` terminó con tres jobs success; Gitleaks y YAML/SDD aprobaron. Las cinco suites: Architecture 2, Contract 3, Integration 13, Security 23 y Unit 29 = 70/70; 0 fallidas/omitidas. Auditoría NuGet: 0 advisories. TRX/Cobertura y JSON de auditoría se conservaron como artefactos.
+- El run [43538064486](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43538064486) del commit documental `e6ad72b` también terminó con sus tres jobs success y cinco suites ejecutadas. GitHub reportó el PR abierto, no fusionado y mergeable contra el SHA vigente de Mark `0f05c07`.
+- Run final comprobado antes de esta anotación: [43538524666](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43538524666), SHA `9d60ab2c21fc52ea43addc64273b2df21594f3b0`, tres jobs success y 70/70: Architecture 2, Contract 3, Integration 13, Security 23 y Unit 29; 0 fallidas/omitidas. Build normal: 0 warnings/errores; análisis: 186 warnings/0 errores; Gitleaks success; NuGet 0 advisories.
+- Se intentó actualizar el cuerpo del PR #4 y publicar un comentario con la evidencia; el conector rechazó ambas escrituras con HTTP 403 `Resource not accessible by integration`. El acceso de lectura funciona, pero el PR no se pudo editar desde esta sesión. No se intentó eludir la restricción; véase `docs/VALIDACION_MARK.md`.
+- No se cambió arquitectura base, Constitución ni tareas funcionales; no se usaron credenciales Atlas, no se desplegó a Azure y el PR #4 permanece sin fusionar.
+
+## Compatibilidad de patch SDK y regresión JWT sin subject (2026-11-14)
+
+- Estado inicial limpio en `fix/mark-api-devsecops-review`; HEAD remoto verificado `808bb225c1e494f38dad951aaa08b177104b4fb4`; base de Mark `0f05c07d099c8a4bb396719d804ec0698a29254a`. Se guardó referencia de respaldo `backup/fix-mark-api-devsecops-review-before-sdk-401-2026-11-14`.
+- `global.json` conserva `10.0.400` y usa `rollForward: latestPatch`. El único SDK instalado es `10.0.400`, confirmado con `dotnet --version`; no se declara probado `10.0.401`.
+- Se añadió regresión en `JwtValidationTests.cs`: firma mediante `TestApiFactory` config real; token con issuer/audience vigentes, expiración futura y `jti`, sin `sub`; control de token válido devuelve 200 y el token sin subject devuelve 401.
+- Restore y build Release local completados; build normal 0 warnings/errores, análisis C# 186 warnings/0 errores. Prueba nueva 1/1. Suites locales: Architecture 2, Contract 3, Security 24, Unit 29 pasaron; Integration 10/13, con 3 fallos de inicialización de Testcontainers porque el Docker Engine no está disponible. Total 68 aprobadas y 3 fallidas por infraestructura, de 71.
+- NuGet Audit: 0 advisories. Gitleaks 8.30.0 local: 23 commits, sin leaks. Se publicó a la rama existente del PR #4.
+- Código publicado en `0bc2736ad320a3c6ac1320693b91504949a8a123`. GitHub Actions [run 43542360312](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43542360312) pasó los tres jobs y 71/71 pruebas (Architecture 2, Contract 3, Integration 13, Security 24, Unit 29), 0 fallidas/omitidas. Gitleaks success, NuGet 0 advisories, build normal 0 warnings/errores y análisis 186 warnings/0 errores.
+- `actions/setup-dotnet` en el runner mostró SDK `10.0.404` para channel 10.0.4xx. La máquina local tiene solo `10.0.400`; `10.0.401` exacto no fue ejecutado ni se declara verificado.
+- Se reforzó el test para que control válido y JWT sin `sub` se generen con el mismo helper, clave y parámetros de issuer/audience/expiración, difiriendo en el claim `sub`. Commit final de código `2e8495ffde1120f5cc45b941747c5b9e23792532`. Run [43543201150](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43543201150): 3 jobs success y las cinco suites 71/71 (0 fallidas/omitidas); Gitleaks success, NuGet 0 advisories, build normal 0 warnings/errores y análisis 186 warnings/0 errores.
+- La documentación quedó en commit `5247fdb472c632b9a762d765ba905002092bd568`; run [43543616458](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43543616458) pasó también los tres jobs y las cinco suites.
+- No se modificó la rama de Mark ni `main`; no se hizo merge, no se usó Atlas productivo ni Azure.
