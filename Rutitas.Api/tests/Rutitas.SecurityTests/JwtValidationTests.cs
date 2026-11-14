@@ -4,6 +4,8 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Rutitas.IntegrationTests;
 using Xunit;
@@ -28,19 +30,21 @@ public sealed class JwtValidationTests
             body.RootElement.GetProperty("user").GetProperty("id").GetString()!);
     }
 
-    private static string SignedToken(string userId, string issuer = "Rutitas.Api",
-        string audience = "Rutitas.Mobile", DateTime? expires = null, bool includeJti = true)
+    private static string SignedToken(IConfiguration configuration,
+        IEnumerable<Claim> claims, string? issuer = null,
+        string? audience = null, DateTime? expires = null)
     {
-        var claims = new List<Claim> { new("sub", userId) };
-        if (includeJti) claims.Add(new Claim("jti", Guid.NewGuid().ToString("N")));
         var token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
+            issuer: issuer ?? configuration["Jwt:Issuer"],
+            audience: audience ?? configuration["Jwt:Audience"],
             claims: claims,
             notBefore: DateTime.UtcNow.AddMinutes(-10),
             expires: expires ?? DateTime.UtcNow.AddMinutes(5),
             signingCredentials: new SigningCredentials(
-                new SymmetricSecurityKey(new byte[32]), SecurityAlgorithms.HmacSha256));
+                new SymmetricSecurityKey(Convert.FromBase64String(
+                    configuration["Jwt:SigningKey"]
+                    ?? throw new InvalidOperationException("Test JWT signing key is missing."))),
+                SecurityAlgorithms.HmacSha256));
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
@@ -55,12 +59,44 @@ public sealed class JwtValidationTests
         using var app = new TestApiFactory();
         using var client = app.CreateClient();
         var (_, userId) = await RegisterAndLogin(client);
-        var token = SignedToken(userId, issuer, audience,
-            expired ? DateTime.UtcNow.AddMinutes(-2) : null, includeJti);
+        var claims = new List<Claim> { new("sub", userId) };
+        if (includeJti) claims.Add(new Claim("jti", Guid.NewGuid().ToString("N")));
+        var configuration = app.Services.GetRequiredService<IConfiguration>();
+        var token = SignedToken(configuration, claims, issuer, audience,
+            expired ? DateTime.UtcNow.AddMinutes(-2) : null);
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", token);
         Assert.Equal(HttpStatusCode.Unauthorized,
             (await client.GetAsync("/api/v1/routes")).StatusCode);
+    }
+
+    [Fact]
+    public async Task SignedJwtWithoutSubjectIsRejectedWithValidControl()
+    {
+        using var app = new TestApiFactory();
+        using var client = app.CreateClient();
+        var (validToken, _) = await RegisterAndLogin(client);
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", validToken);
+        Assert.Equal(HttpStatusCode.OK,
+            (await client.GetAsync(new Uri("/api/v1/routes", UriKind.Relative))).StatusCode);
+
+        var configuration = app.Services.GetRequiredService<IConfiguration>();
+        var tokenWithoutSubject = SignedToken(configuration,
+        [
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
+        ]);
+        var decodedToken = new JwtSecurityTokenHandler().ReadJwtToken(tokenWithoutSubject);
+        Assert.DoesNotContain(decodedToken.Claims,
+            claim => claim.Type == JwtRegisteredClaimNames.Sub);
+        Assert.Contains(decodedToken.Claims,
+            claim => claim.Type == JwtRegisteredClaimNames.Jti);
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", tokenWithoutSubject);
+        Assert.Equal(HttpStatusCode.Unauthorized,
+            (await client.GetAsync(new Uri("/api/v1/routes", UriKind.Relative))).StatusCode);
     }
 
     [Fact]
