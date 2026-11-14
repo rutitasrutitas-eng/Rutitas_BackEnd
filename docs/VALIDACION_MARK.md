@@ -1,5 +1,37 @@
 # Validación técnica de la entrega de Mark
 
+## Ajuste de compatibilidad SDK y JWT sin `sub` (14/11/2026)
+
+### Preparación y cambios
+
+- Estado inicial verificado: rama `fix/mark-api-devsecops-review`, limpia y en HEAD remoto `808bb225c1e494f38dad951aaa08b177104b4fb4`; la base de Mark seguía en `0f05c07d099c8a4bb396719d804ec0698a29254a`. Se creó respaldo local `backup/fix-mark-api-devsecops-review-before-sdk-401-2026-11-14`.
+- `global.json` conserva `10.0.400` y cambia `rollForward` a `latestPatch`. Solo está instalado localmente SDK `10.0.400`, y `dotnet --version` reporta `10.0.400`. No se afirma una ejecución local bajo `10.0.401`, pues no está instalado.
+- `JwtValidationTests` firma tokens con el `Jwt:SigningKey`, emisor y audiencia obtenidos de la configuración real del `TestApiFactory`. La regresión crea un token con `jti` válido, vigencia actual, emisor y audiencia configurados, sin claim `sub`; comprueba explícitamente la ausencia de `sub` y presencia de `jti`. Primero usa el token de control emitido por login y verifica HTTP 200; el token firmado sin `sub` recibe HTTP 401.
+
+### Resultados locales
+
+| Control | Resultado | Límite |
+|---|---|---|
+| SDK | `dotnet --version`: 10.0.400 | 10.0.401 no está instalado y no se declara probado. |
+| Restore | Correcto con `NuGetAudit=true`, `NuGetAuditMode=all` | No se utilizó MongoDB Atlas. |
+| Build Release normal | 0 warnings, 0 errores | — |
+| Análisis C# completo | 186 warnings, 0 errores | Mismo total que antes del test nuevo. |
+| Prueba JWT sin `sub` | 1/1 pasó; control válido 200 y token sin `sub` 401 | Ejecutada bajo SDK 10.0.400. |
+| Cinco suites | Architecture 2/2, Contract 3/3, Security 24/24, Unit 29/29; Integration 10/13. Total local 68 aprobadas y 3 fallidas por infraestructura, de 71. | Las tres fallidas intentaron iniciar MongoDB Testcontainers, pero el Docker Engine local no está disponible (`npipe://./pipe/docker_engine`). No se borraron ni omitieron pruebas. |
+| NuGet Audit | 0 advisories (incluye dependencias transitivas) | — |
+| Gitleaks 8.30.0 | 23 commits, sin leaks | El job remoto debe confirmar el nuevo SHA. |
+| SDK 10.0.401 | No probado | No está instalado en este entorno; la validación de CI decidirá si el roll-forward solicitado funciona en runner. |
+
+### GitHub Actions para el código actualizado
+
+- Commit de código publicado: `0bc2736ad320a3c6ac1320693b91504949a8a123`, en la rama existente del PR #4.
+- [Run 43542360312](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43542360312): los 3 jobs terminaron en **success**: detectar solución, SDD/YAML/Gitleaks y .NET 10 con restore, build, análisis, auditoría y cinco suites.
+- Conteo del run: Architecture 2, Contract 3, Integration 13, Security 24 y Unit 29 = **71/71**, 0 fallidas y 0 omitidas. Incluye la nueva regresión JWT.
+- NuGet audit remoto: 0 advisories. Build normal: 0 warnings/errores. Análisis completo: 186 warnings/0 errores. Gitleaks remoto: success.
+- `actions/setup-dotnet` leyó `global.json` con `rollForward: latestPatch`; el log del runner indica que seleccionó/ya tenía SDK `10.0.404` en la feature band 10.0.4xx. El equipo local solo tiene instalado `10.0.400`; `10.0.401` exacto no se ejecutó en ninguno de estos entornos y no se declara verificado.
+
+No se cambió el PR de destino, `main` ni la rama de Mark. Los resultados definitivos de CI se comprobarán también para el siguiente SHA documental.
+
 ## Actualización de conflictos y advertencias (13/11/2026)
 
 Esta sección es la evidencia más reciente y reemplaza para el estado actual los SHA y resultados históricos descritos más abajo; no borra su registro. Se creó la referencia local `backup/fix-mark-api-devsecops-review-before-merge-2026-11-13` antes de integrar cambios. La rama local comenzó en `84e9564733a03323cefe1f683d5f795521fd5ac0` y recibió mediante merge normal el HEAD vigente de Mark `0f05c07d099c8a4bb396719d804ec0698a29254a`. El merge quedó como `5c2824e` (primer padre 84e9564, segundo padre 0f05c07); el commit de correcciones de código es `c08f998`. No se modificó `main` ni la rama de Mark. La documentación de resultados y el push del PR están pendientes.

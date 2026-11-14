@@ -121,3 +121,14 @@ Fuentes detalladas: [documentos consultados](docs/fuentes-consultadas.md). Estad
 - Run final comprobado antes de esta anotación: [43538524666](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43538524666), SHA `9d60ab2c21fc52ea43addc64273b2df21594f3b0`, tres jobs success y 70/70: Architecture 2, Contract 3, Integration 13, Security 23 y Unit 29; 0 fallidas/omitidas. Build normal: 0 warnings/errores; análisis: 186 warnings/0 errores; Gitleaks success; NuGet 0 advisories.
 - Se intentó actualizar el cuerpo del PR #4 y publicar un comentario con la evidencia; el conector rechazó ambas escrituras con HTTP 403 `Resource not accessible by integration`. El acceso de lectura funciona, pero el PR no se pudo editar desde esta sesión. No se intentó eludir la restricción; véase `docs/VALIDACION_MARK.md`.
 - No se cambió arquitectura base, Constitución ni tareas funcionales; no se usaron credenciales Atlas, no se desplegó a Azure y el PR #4 permanece sin fusionar.
+
+## Compatibilidad de patch SDK y regresión JWT sin subject (2026-11-14)
+
+- Estado inicial limpio en `fix/mark-api-devsecops-review`; HEAD remoto verificado `808bb225c1e494f38dad951aaa08b177104b4fb4`; base de Mark `0f05c07d099c8a4bb396719d804ec0698a29254a`. Se guardó referencia de respaldo `backup/fix-mark-api-devsecops-review-before-sdk-401-2026-11-14`.
+- `global.json` conserva `10.0.400` y usa `rollForward: latestPatch`. El único SDK instalado es `10.0.400`, confirmado con `dotnet --version`; no se declara probado `10.0.401`.
+- Se añadió regresión en `JwtValidationTests.cs`: firma mediante `TestApiFactory` config real; token con issuer/audience vigentes, expiración futura y `jti`, sin `sub`; control de token válido devuelve 200 y el token sin subject devuelve 401.
+- Restore y build Release local completados; build normal 0 warnings/errores, análisis C# 186 warnings/0 errores. Prueba nueva 1/1. Suites locales: Architecture 2, Contract 3, Security 24, Unit 29 pasaron; Integration 10/13, con 3 fallos de inicialización de Testcontainers porque el Docker Engine no está disponible. Total 68 aprobadas y 3 fallidas por infraestructura, de 71.
+- NuGet Audit: 0 advisories. Gitleaks 8.30.0 local: 23 commits, sin leaks. Se publicó a la rama existente del PR #4.
+- Código publicado en `0bc2736ad320a3c6ac1320693b91504949a8a123`. GitHub Actions [run 43542360312](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43542360312) pasó los tres jobs y 71/71 pruebas (Architecture 2, Contract 3, Integration 13, Security 24, Unit 29), 0 fallidas/omitidas. Gitleaks success, NuGet 0 advisories, build normal 0 warnings/errores y análisis 186 warnings/0 errores.
+- `actions/setup-dotnet` en el runner mostró SDK `10.0.404` para channel 10.0.4xx. La máquina local tiene solo `10.0.400`; `10.0.401` exacto no fue ejecutado ni se declara verificado.
+- No se modificó la rama de Mark ni `main`; no se hizo merge, no se usó Atlas productivo ni Azure.

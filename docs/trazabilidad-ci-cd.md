@@ -1,5 +1,19 @@
 # Trazabilidad SDD — CI/CD-001 Backend
 
+## Ajuste de SDK y regresión JWT del PR #4 (14/11/2026)
+
+| Requisito / control | Evidencia | Estado / límite |
+|---|---|---|
+| Respaldo y rama | Inicial limpio en `fix/mark-api-devsecops-review`, SHA `808bb225c1e494f38dad951aaa08b177104b4fb4`; ref `backup/fix-mark-api-devsecops-review-before-sdk-401-2026-11-14`. Base de Mark `0f05c07d099c8a4bb396719d804ec0698a29254a`. Código actualizado `0bc2736ad320a3c6ac1320693b91504949a8a123`. | Rama existente del PR #4; rama de Mark y `main` intactas. |
+| SDK | `global.json`: versión `10.0.400`, `rollForward: latestPatch`. `dotnet --version` = `10.0.400`. | SDK 10.0.401 no está instalado localmente y no se reporta como probado. |
+| JWT | `JwtValidationTests.SignedJwtWithoutSubjectIsRejectedWithValidControl`: token firmado usando configuración de `TestApiFactory`, con `jti`, issuer/audience vigentes y expiración futura, sin `sub`; controla token válido. | Control devuelve 200, token sin `sub` devuelve 401 (1/1 local). |
+| Restore/build | Restore con NuGet Audit; build Release normal 0 warnings/errores; análisis completo 186 warnings/0 errores. | Ejecutado bajo SDK 10.0.400. |
+| Cinco suites local | Architecture 2, Contract 3, Security 24, Unit 29, Integration 10 aprobadas. | 68 aprobadas; 3 Integration fallaron al conectar a Docker Engine ausente; 0 omitidas. |
+| CI remoto | [Run 43542360312](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43542360312) | 3 jobs success; 71/71 (Architecture 2, Contract 3, Integration 13, Security 24, Unit 29), 0 fallidas/omitidas. Gitleaks success, NuGet 0 advisories, build normal 0 warnings/errores, análisis 186 warnings/0 errores. |
+| Dependencias/secretos local | NuGet Audit: 0 advisories; Gitleaks 8.30.0 local revisó 23 commits y no encontró secretos. | Confirmados también por CI en run 43542360312. |
+
+El runner que procesó `global.json` muestra SDK `10.0.404` del canal 10.0.4xx; localmente se comprobó 10.0.400. 10.0.401 exacto no se ejecutó ni localmente ni en el runner, por lo que se registra como compatibilidad solicitada pero no verificada directamente. Véase [reporte detallado](VALIDACION_MARK.md).
+
 ## Anexo de evidencia del PR correctivo #4 (13/11/2026)
 
 Este anexo registra trabajo técnico de una rama de revisión; no ratifica la Constitución, no convierte las tareas SDD en aprobadas y no habilita CD.
