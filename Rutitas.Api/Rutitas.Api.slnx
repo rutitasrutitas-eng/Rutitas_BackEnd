@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/Elementos de la solución/">
+    <File Path="CodeCoverage.runsettings" />
+  </Folder>
+  <Project Path="Rutitas.Api/Rutitas.Api.csproj" />
+  <Project Path="Rutitas.Application/Rutitas.Application.csproj" />
+  <Project Path="Rutitas.Domain/Rutitas.Domain.csproj" />
+  <Project Path="Rutitas.Infrastructure/Rutitas.Infrastructure.csproj">
+    <BuildDependency Project="Rutitas.Domain/Rutitas.Domain.csproj" />
+  </Project>
+  <Project Path="tests/Rutitas.ArchitectureTests/Rutitas.ArchitectureTests.csproj" />
+  <Project Path="tests/Rutitas.ContractTests/Rutitas.ContractTests.csproj" />
+  <Project Path="tests/Rutitas.IntegrationTests/Rutitas.IntegrationTests.csproj" />
+  <Project Path="tests/Rutitas.SecurityTests/Rutitas.SecurityTests.csproj" />
+  <Project Path="tests/Rutitas.UnitTests/Rutitas.UnitTests.csproj" />
+</Solution>

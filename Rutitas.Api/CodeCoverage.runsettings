@@ -1,0 +1,18 @@
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="Code Coverage">
+        <Configuration>
+          <CodeCoverage>
+            <ModulePaths>
+              <Include>
+                <ModulePath>.*Rutitas\.(Api|Application|Domain|Infrastructure)\.dll$</ModulePath>
+              </Include>
+            </ModulePaths>
+            <IncludeTestAssembly>False</IncludeTestAssembly>
+          </CodeCoverage>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

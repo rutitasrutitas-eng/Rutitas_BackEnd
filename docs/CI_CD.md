@@ -1,5 +1,9 @@
 # CI/CD — Rutitas Backend (preparación)
 
+## Revisión de la API de Mark (13/11/2026)
+
+La rama `feature/sdd-azure-devsecops` ya contiene solución .NET y cinco suites. La rama correctiva `fix/mark-api-devsecops-review` incluye `global.json` en la raíz esperada por `ci.yml`, activa CI para PR hacia la rama de Mark y conserva TRX/cobertura. El resultado de ese SHA sigue pendiente hasta comprobar el run. Véase [evidencia y pendientes](VALIDACION_MARK.md). Lo que sigue es el registro histórico de CI cuando `main` todavía no contenía la API.
+
 **Estado**: la rama `main` revisada el 11 de noviembre de 2026 es documental; no contiene una solución .NET. La preferencia ASP.NET Core 10 / Cloud Run / Firestore es una propuesta, no una decisión aprobada. Hay otras alternativas previas (Azure/MongoDB). No se elige nube ni persistencia en este incremento.
 
 - `.github/workflows/ci.yml`: comprueba documentos SDD y ejecuta Gitleaks. Si detecta una solución/proyecto .NET exige un proyecto de pruebas, ejecuta restore/build/test. Si no existe solución, el build es **NO ejecutado**, aunque SDD pase.

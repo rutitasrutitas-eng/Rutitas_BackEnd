@@ -31,7 +31,7 @@ jobs:
           [[ "$PROJECT" != *'..'* ]] || { echo '::error::No se permite traversal'; exit 1; }
           test -f "$PROJECT" || { echo '::error::No existe csproj'; exit 1; }
           test -s global.json || { echo '::error::Falta global.json con SDK aprobado'; exit 1; }
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
           global-json-file: global.json
       - name: Generar paquete para revisión
