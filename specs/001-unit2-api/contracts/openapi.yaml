@@ -1,25 +1,32 @@
 openapi: 3.1.0
 info:
-  title: Rutitas API - Unidad II
+  title: Rutitas API - Integración Backend Android
   version: 1.0.0-draft
   description: |
-    Contrato propuesto para los 7 endpoints de autenticación, perfil propio
-    y consulta de rutas de Rutitas Backend. Ya existe implementación local observada;
-    el contrato continúa propuesto hasta aprobación de BACKEND-D06.
-    Este documento no autoriza despliegue ni representa aprobación académica.
+    Contrato OpenAPI 3.1 de los siete endpoints implementados
+    en el Backend de Rutitas.
+
+    El PR #5 fue integrado a main. La última validación local
+    registró 71 pruebas aprobadas, 0 fallidas y 0 omitidas.
+
+    El contrato se encuentra en revisión conjunta con Android.
+    No representa autorización para desplegar infraestructura
+    ni incorpora funcionalidades pendientes del MVP.
   contact:
     name: Equipo Rutitas Backend
+
 servers:
   - url: https://localhost:7291/api/v1
-    description: Desarrollo local observado en Visual Studio; no accesible desde Internet
+    description: Desarrollo local con HTTPS; requiere configuración local.
   - url: https://api.rutitas.example/api/v1
-    description: URL ilustrativa de despliegue futuro; no existe ni está aprobada
-x-phase: Unidad II (3-4 nov 2026)
-x-verification: pruebas_63_reportadas_historicamente_ci_del_sha_revisado_pendiente
-x-cloud-deployment: no_verificado
+    description: URL ilustrativa, NO desplegada ni disponible.
+
+x-phase: Fase A - Integracion inicial Android Backend
+x-verification: 71_pruebas_locales_aprobadas_post_pr4
+x-cloud-deployment: pendiente_de_aprobacion_y_despliegue
 x-mobile-contract-approval: pendiente
-x-status: propuesto
-x-implementation: siete_operaciones_presentes_en_rama_feature_sdd_azure_devsecops
+x-status: implementado_pendiente_de_acuerdo_con_android
+x-implementation: siete_operaciones_integradas_en_main_pr5
 x-decisions:
   - BACKEND-D05
   - BACKEND-D06
