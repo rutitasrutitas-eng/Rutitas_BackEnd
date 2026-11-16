@@ -337,6 +337,59 @@ También comprueba revocación y estado de usuario.
 
 La gestión de renovación de tokens no forma parte de los siete endpoints actuales. Android no debe asumir que existe un endpoint de refresh.
 
+### 12.1 Política propuesta de sesiones Android
+
+Esta política se encuentra pendiente de confirmación conjunta
+con el equipo móvil.
+
+**JWT vencido**
+
+Cuando el token expire, Android deberá dejar de utilizarlo
+y solicitar al usuario que inicie sesión nuevamente.
+
+Actualmente no existe un endpoint de renovación de tokens.
+
+**Respuesta HTTP 401**
+
+Cuando una operación protegida devuelva HTTP 401 por
+credenciales inválidas, vencidas o revocadas, Android deberá:
+
+1. Invalidar la sesión local.
+2. Eliminar el token almacenado de forma segura.
+3. Evitar reintentos automáticos con el mismo token.
+4. Solicitar un nuevo inicio de sesión.
+
+**Cierre de sesión con conexión**
+
+Android deberá solicitar POST /api/v1/auth/logout para
+revocar el token en el servidor y después eliminar la
+sesión local.
+
+**Cierre de sesión sin conexión**
+
+Si el usuario solicita cerrar sesión sin Internet, Android
+podrá eliminar la sesión y bloquear el acceso local.
+
+Sin embargo, deberá informar que la revocación remota
+no pudo confirmarse.
+
+El cierre local no garantiza que el token haya sido
+revocado en el servidor.
+
+El token no deberá reutilizarse ni quedar disponible
+para otras cuentas.
+
+La estrategia de revocación diferida, si fuera necesaria,
+requiere un diseño adicional de seguridad.
+
+**Errores de conectividad**
+
+Una falla de conexión no debe interpretarse automáticamente
+como un HTTP 401.
+
+Android deberá distinguir errores de red, respuestas HTTP
+y credenciales inválidas.
+
 ## 13. Manejo de errores
 
 El contrato utiliza respuestas `application/problem+json`.
@@ -402,6 +455,35 @@ Los siguientes módulos necesitan especificación, aprobación, implementación 
 Todavía no forman parte de los siete endpoints implementados.
 
 Los nombres, cuerpos JSON y respuestas de estas operaciones se definirán en un contrato posterior aprobado.
+
+### 15.1 Datos de rutas no disponibles en Fase A
+
+El Backend actual permite consultar información básica
+de las rutas, pero todavía no ofrece un contrato completo
+para operaciones de transporte.
+
+Los siguientes datos quedan pendientes de Fase B:
+
+- Información del conductor autorizado.
+- Información del vehículo.
+- Horarios y fechas de salida.
+- Lugares disponibles.
+- Precio o contribución del viaje.
+- Estado de reservas.
+- Confirmación de abordajes.
+
+Durante la Fase A, Android no deberá presentar estos datos
+como información real del servidor cuando procedan
+únicamente de Room o del modo DEMO.
+
+Las pantallas que dependan de estas funcionalidades
+deberán mantenerse claramente identificadas como DEMO,
+ocultarse o deshabilitarse en el ambiente de integración
+real, según lo acordado por el equipo.
+
+La fuente de verdad para disponibilidad, reservas,
+identidad y autorización será el Backend una vez
+implementadas las operaciones correspondientes.
 
 ## 16. Responsabilidades
 

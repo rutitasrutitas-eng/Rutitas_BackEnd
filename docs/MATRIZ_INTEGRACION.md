@@ -187,3 +187,21 @@ implementación y pruebas antes de integrarse a Android.
 - PR #5 del Backend
 
 **Estado:** documento propuesto para revisión del equipo.
+
+---
+
+## 11. Observaciones de revisión de Android
+
+Durante la revisión conjunta del PR #6, el equipo móvil
+identificó tres aspectos que requieren aclaración.
+
+| Observación | Acuerdo propuesto | Responsable |
+|---|---|---|
+| GET /routes y HTTP 429 | Mantener los errores declarados en OpenAPI | Mark |
+| Expiración JWT y HTTP 401 | Invalidar sesión y solicitar nuevo login | Mark y Ame |
+| Logout sin conexión | Cierre local sin afirmar revocación remota | Mark y Ame |
+| Campos de transporte no disponibles | No presentarlos como datos reales en Fase A | Ame |
+| Reservas, conductores y abordajes | Definir contratos e implementación en Fase B | Mark y Ame |
+
+**Estado de los acuerdos:** propuestos, pendientes de
+confirmación conjunta y revisión final del PR #6.
