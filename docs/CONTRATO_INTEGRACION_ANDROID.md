@@ -94,6 +94,22 @@ Los resultados de GitHub Actions corresponden
 a los commits indicados y son independientes
 de las pruebas ejecutadas localmente.
 
+**GitHub Actions — Correcciones finales del líder**
+
+Commit: `a34d10b`
+
+Ejecución:
+https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/44011899569
+
+Resultado: tres comprobaciones exitosas.
+
+Esta ejecución incluye las correcciones documentales
+sobre HTTP 503, la matriz de integración con Android
+y la actualización del README.
+
+Las pruebas automatizadas no sustituyen las pruebas
+funcionales pendientes entre Android y el Backend HTTPS.
+
 
 ## 3. Dirección base
 
