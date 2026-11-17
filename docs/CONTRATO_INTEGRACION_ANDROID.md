@@ -72,6 +72,29 @@ evidencias independientes.
 Las pruebas automatizadas no sustituyen las futuras
 pruebas funcionales entre Android y el Backend HTTPS.
 
+**GitHub Actions — Actualización de la Fase A**
+
+Commit: `de79303`
+
+Ejecución:
+https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/44000642612
+
+Resultado: tres comprobaciones exitosas.
+
+**Validación adicional**
+
+Commit: `8a74778`
+
+Ejecución:
+https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/44008799552
+
+Resultado: tres comprobaciones exitosas.
+
+Los resultados de GitHub Actions corresponden
+a los commits indicados y son independientes
+de las pruebas ejecutadas localmente.
+
+
 ## 3. Dirección base
 
 Todos los endpoints existentes utilizan el prefijo:
@@ -197,7 +220,20 @@ El Backend revoca el identificador `jti` del JWT. Android deberá invalidar su s
 
 Un token inválido, vencido o revocado puede producir HTTP 401.
 
-**Errores documentados:** 401 y 500.
+**Errores documentados:** 401 y 503.
+
+Cuando la revocación del token falla, el Backend
+responde HTTP 503 mediante ProblemDetails.
+
+Android no deberá interpretar HTTP 503 como una
+revocación exitosa.
+
+Puede cerrar la sesión local de forma segura, pero
+deberá informar que no se confirmó la revocación remota.
+
+No se debe reutilizar el token ni registrar su valor
+en mensajes o logs.
+
 
 El comportamiento sin conexión debe acordarse con el equipo móvil, especialmente cuando no sea posible confirmar la revocación remota.
 

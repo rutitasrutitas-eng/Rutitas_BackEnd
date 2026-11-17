@@ -1,5 +1,49 @@
 # Rutitas — Backend
 
+## Estado actual — Noviembre de 2026
+
+Rutitas Backend cuenta con una API implementada
+en ASP.NET Core 10 y MongoDB, integrada a `main`
+mediante el PR #5.
+
+### Siete endpoints implementados
+
+1. `POST /api/v1/auth/register`
+2. `POST /api/v1/auth/login`
+3. `POST /api/v1/auth/logout`
+4. `GET /api/v1/users/me`
+5. `PATCH /api/v1/users/me`
+6. `GET /api/v1/routes`
+7. `GET /api/v1/routes/{id}`
+
+El Backend utiliza autenticación JWT,
+validaciones, rate limiting y pruebas automatizadas.
+
+El PR #6 documenta el contrato de integración
+Backend–Android.
+
+Ame otorgó conformidad técnica al contrato
+revisado en el commit `8a74778`.
+
+La revisión final del líder y las pruebas reales
+de integración Android–Backend siguen pendientes.
+
+Todavía no existe un entorno HTTPS y MongoDB
+de pruebas autorizado y desplegado.
+
+### Documentación histórica
+
+Las secciones siguientes conservan los antecedentes
+de arquitectura SDD, validaciones y decisiones
+anteriores del proyecto.
+
+Las afirmaciones históricas sobre la ausencia de
+implementación corresponden a etapas anteriores
+y no describen el estado actual del Backend.
+
+---
+
+
 ## Estado técnico observado (13/11/2026)
 
 La rama `feature/sdd-azure-devsecops` contiene una API ASP.NET Core 10 con MongoDB y siete endpoints bajo `/api/v1`: registro, login, logout, consulta y edición del perfil propio, listado y detalle de rutas. La rama correctiva `fix/mark-api-devsecops-review` integra mediante merge normal el HEAD vigente de Mark (`0f05c07`) con la revisión previa (`84e9564`). El commit `c08f998` añade guardas de entrada y libera recursos en pruebas. Para SHA `9d60ab2`, el run [43538524666](https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43538524666) pasó los tres jobs y las cinco suites (70/70); consulte el [informe de validación](docs/VALIDACION_MARK.md), el [inventario del análisis C#](docs/ADVERTENCIAS_ANALISIS_CSHARP.md), el [contrato OpenAPI](specs/001-unit2-api/contracts/openapi.yaml) y la [matriz Android](docs/COMPATIBILIDAD_ANDROID.md).

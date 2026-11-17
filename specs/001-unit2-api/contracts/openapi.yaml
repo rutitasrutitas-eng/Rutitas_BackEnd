@@ -117,8 +117,14 @@ paths:
           description: Sesión revocada o ya revocada.
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+
+        '503':
+          description: Servicio temporalmente no disponible; no se confirmó la revocación del token.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
   /users/me:
     get:
       tags: [Users]
