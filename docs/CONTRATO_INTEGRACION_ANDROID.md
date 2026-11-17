@@ -306,7 +306,7 @@ Android deberá obtener las rutas desde `items` y utilizar los metadatos para im
 
 Este resumen no contiene todavía toda la información necesaria para reservar lugares, como conductor, vehículo, cupos o fechas de viaje.
 
-**Errores documentados:** 400, 401 y 500.
+**Errores documentados:** 400, 401, 429 y 500.
 
 ## 11. Detalle de una ruta
 
@@ -456,6 +456,69 @@ Los errores de validación pueden incluir un objeto adicional llamado `errors`, 
 No todos estos códigos están declarados para todos los endpoints.
 
 Errores de conectividad, DNS y tiempo de espera deben manejarse por separado de las respuestas HTTP.
+
+### 13.1 Acuerdos de manejo de errores y actualización de perfil
+
+**Actualización de teléfono**
+
+En PATCH /api/v1/users/me:
+
+- Si se omite `phone`, se conserva el valor existente.
+- Si se envía `"phone": null`, se elimina el teléfono.
+- Si se envía un string válido, se actualiza el teléfono.
+- El formato aceptado es internacional, por ejemplo:
+  `+525512345678`.
+
+Android deberá diferenciar un campo ausente de uno
+enviado explícitamente como null.
+
+**ProblemDetails**
+
+Android deberá interpretar las respuestas HTTP de
+error y, cuando exista, el cuerpo ProblemDetails.
+
+Los errores de validación pueden incluir la propiedad
+`errors`, con mensajes específicos por campo.
+
+La aplicación no debe depender de textos exactos de
+`title` o `detail` para decidir su comportamiento.
+
+**HTTP 429 y Retry-After**
+
+El Backend aplica rate limiting a las consultas de rutas.
+
+Actualmente devuelve:
+- HTTP 429.
+- Header `Retry-After: 60`.
+- Cuerpo de error basado en ProblemDetails.
+
+Android deberá respetar Retry-After y evitar
+reintentos inmediatos o repetitivos.
+
+No debe realizar reintentos automáticos de operaciones
+que puedan producir efectos secundarios sin una política
+de idempotencia aprobada.
+
+**Errores de conectividad**
+
+Las fallas de DNS, TLS, conexión y tiempo de espera no
+son respuestas HTTP 401 ni HTTP 500 del servidor.
+
+Android deberá informar el problema y permitir
+reintentar cuando corresponda, sin cerrar sesión
+automáticamente por una falla de red.
+
+**Entorno HTTPS**
+
+La URL definitiva de pruebas queda pendiente de
+autorización del líder.
+
+El Backend y Android realizarán las pruebas reales
+cuando exista un entorno HTTPS autorizado,
+configurado y validado.
+
+La Fase A no se considerará completa únicamente
+con pruebas locales, mocks o modo DEMO.
 
 ## 14. Compatibilidad con Android
 
