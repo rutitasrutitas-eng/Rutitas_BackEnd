@@ -36,6 +36,42 @@ Esto demuestra el funcionamiento de las pruebas ejecutadas, pero no equivale a v
 
 `specs/001-unit2-api/contracts/openapi.yaml`
 
+### 2.1 Evidencia técnica verificada
+
+**Validación local**
+
+Después de integrar el PR #4 se ejecutaron las cinco
+suites de pruebas xUnit con .NET 10.
+
+Resultados:
+- 71 pruebas aprobadas.
+- 0 fallidas.
+- 0 omitidas.
+- Compilación Release exitosa.
+- MongoDB con Testcontainers funcionando.
+
+Estos resultados corresponden a la ejecución local.
+
+**GitHub Actions — PR #6**
+
+Commit verificado: `b40122b`
+
+Ejecución:
+https://github.com/rutitasrutitas-eng/Rutitas_BackEnd/actions/runs/43811605917
+
+Estado de la ejecución: completada correctamente.
+
+Las comprobaciones incluyen compilación y análisis .NET,
+suites de pruebas, validación SDD/YAML y Gitleaks.
+
+La ejecución automatizada y la validación local son
+evidencias independientes.
+
+**Alcance**
+
+Las pruebas automatizadas no sustituyen las futuras
+pruebas funcionales entre Android y el Backend HTTPS.
+
 ## 3. Dirección base
 
 Todos los endpoints existentes utilizan el prefijo:

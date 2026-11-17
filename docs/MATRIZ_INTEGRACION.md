@@ -197,7 +197,9 @@ identificó tres aspectos que requieren aclaración.
 
 | Observación | Acuerdo propuesto | Responsable |
 |---|---|---|
-| GET /routes y HTTP 429 | Mantener los errores declarados en OpenAPI | Mark |
+
+| GET /routes y HTTP 429 | Documentar HTTP 429 en OpenAPI porque el Backend aplica rate limiting también al listado | Mark |
+
 | Expiración JWT y HTTP 401 | Invalidar sesión y solicitar nuevo login | Mark y Ame |
 | Logout sin conexión | Cierre local sin afirmar revocación remota | Mark y Ame |
 | Campos de transporte no disponibles | No presentarlos como datos reales en Fase A | Ame |
