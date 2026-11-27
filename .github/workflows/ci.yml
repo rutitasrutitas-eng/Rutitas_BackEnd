@@ -46,6 +46,40 @@ jobs:
           ghcr.io/gitleaks/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9
           git --redact --exit-code 1 /repo
 
+  maps-contract-tests:
+    name: MAPS-001 - OpenAPI y pruebas de contrato
+    needs: sdd-and-security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Preparar entorno Python aislado
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/maps-contract-venv"
+          "$RUNNER_TEMP/maps-contract-venv/bin/python" -m pip install \
+            --disable-pip-version-check \
+            -r specs/015-maps-001-azure-maps/tests/requirements.txt
+      - name: Ejecutar pruebas MAPS-001
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/maps-contract-venv/bin/python" -B \
+            specs/015-maps-001-azure-maps/tests/test_maps_contract.py \
+            2>&1 | tee maps-contract-results.txt
+          echo 'MAPS-001: pruebas de contrato aprobadas.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Conservar evidencia MAPS-001
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: maps-contract-test-results
+          path: maps-contract-results.txt
+          if-no-files-found: warn
+          retention-days: 14
+
   detect-project:
     name: Detectar solución .NET
     runs-on: ubuntu-latest
