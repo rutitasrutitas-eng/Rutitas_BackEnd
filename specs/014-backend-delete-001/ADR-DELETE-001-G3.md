@@ -1,6 +1,6 @@
 # ADR-DELETE-001-G3 - Ejecucion durable
 
-Estado: PROPUESTO PARA RATIFICACION
+Estado: RATIFICADO POR COORDINACION - 2026-11-26
 Modulo: BACKEND-DELETE-001
 Referencia: PR Draft #7
 
@@ -118,3 +118,18 @@ adicionales sin autorizacion.
 ARQUITECTURA IMPLEMENTADA LOCALMENTE.
 RATIFICACION G3 PENDIENTE.
 PRODUCCION NO-GO.
+
+
+## Ratificacion de coordinacion
+
+Fecha: 2026-11-26.
+
+DaRa ratifica la separacion arquitectonica
+de users y account_deletion_jobs mediante
+coordinacion transaccional en MongoDB.
+
+Consultar:
+ratificacion-coordinacion-2026-11-26.md
+
+Esta decision no autoriza el merge
+ni el despliegue productivo.
