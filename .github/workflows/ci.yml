@@ -80,6 +80,43 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  content-safety-contract-tests:
+    name: CONTENT-SAFETY-001 - OpenAPI y pruebas de contrato
+    needs: sdd-and-security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Preparar entorno Python aislado
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/content-safety-contract-venv"
+          "$RUNNER_TEMP/content-safety-contract-venv/bin/python" -m pip install \
+            --disable-pip-version-check \
+            -r specs/016-content-safety-001/tests/requirements.txt
+
+      - name: Ejecutar pruebas CONTENT-SAFETY-001
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/content-safety-contract-venv/bin/python" -B \
+            specs/016-content-safety-001/tests/test_content_safety_contract.py \
+            2>&1 | tee content-safety-contract-results.txt
+          echo 'CONTENT-SAFETY-001: pruebas de contrato aprobadas.' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Conservar evidencia CONTENT-SAFETY-001
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: content-safety-contract-test-results
+          path: content-safety-contract-results.txt
+          if-no-files-found: warn
+          retention-days: 14
+
   detect-project:
     name: Detectar solución .NET
     runs-on: ubuntu-latest
