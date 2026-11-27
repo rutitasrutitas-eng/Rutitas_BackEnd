@@ -1,4 +1,4 @@
-﻿
+
 using Rutitas.Domain.Entities;
 
 namespace Rutitas.Application.Interfaces;
@@ -20,10 +20,6 @@ public interface IUserRepository
         User user,
         CancellationToken cancellationToken = default);
 
-    // Actualizar usuario
-    Task UpdateAsync(
-        User user,
-        CancellationToken cancellationToken = default);
 
     // Actualizar únicamente datos permitidos del perfil
     Task<User?> UpdateProfileAsync(

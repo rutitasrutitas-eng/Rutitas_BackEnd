@@ -34,6 +34,7 @@ BsonClassMap.TryRegisterClassMap<Rutitas.Domain.Entities.Route>(cm =>
 // 1. CONTROLADORES Y OPENAPI
 // ========================================
 
+builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
@@ -101,6 +102,11 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 builder.Services.AddScoped<
     IUserRepository,
     MongoUserRepository>();
+
+// Eliminacion programada de cuentas.
+builder.Services.AddScoped<
+    IAccountDeletionRepository,
+    MongoAccountDeletionRepository>();
 
 builder.Services.AddScoped<
     ITokenRevocationRepository,
@@ -187,7 +193,23 @@ builder.Services
                         subject,
                         context.HttpContext.RequestAborted);
 
-                    if (revoked || user is null || user.Status != "active")
+                    var versionClaim = context.Principal?
+                        .FindFirst("sessionVersion")?.Value;
+
+                    var versionValid =
+                        long.TryParse(
+                            versionClaim,
+                            System.Globalization.NumberStyles.None,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out var tokenVersion) &&
+                        tokenVersion >= 1 &&
+                        user is not null &&
+                        tokenVersion == user.SessionVersion;
+
+                    if (revoked ||
+                        user is null ||
+                        user.Status != "active" ||
+                        !versionValid)
                     {
                         context.Fail(
                             "Token is no longer valid.");
@@ -219,6 +241,9 @@ builder.Services.AddAuthorization();
 // 6. RATE LIMITING
 // ========================================
 
+builder.Services.AddScoped<
+    Rutitas.Application.Interfaces.IRecoveryTokenRepository,
+    Rutitas.Infrastructure.Repositories.MongoRecoveryTokenRepository>();
 builder.Services.AddRateLimiter(options =>
 {
     // Registro: 5 solicitudes por minuto.
@@ -260,6 +285,47 @@ builder.Services.AddRateLimiter(options =>
                 AutoReplenishment = true
             }));
 
+        // Recuperacion restringida: 5 intentos por minuto por IP.
+    options.AddPolicy("deletion-recovery", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?
+                .ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+        // Consultas y cancelaciones con credencial restringida.
+    // Limite por IP para reducir el abuso de estos endpoints.
+    options.AddPolicy("deletion-token", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?
+                .ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    // DELETE-001: limite por usuario autenticado.
+    options.AddPolicy("account-deletion", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.User.Identity?.IsAuthenticated == true &&
+            context.User.FindFirst("sub") is { } subject
+                ? "user:" + subject.Value
+                : "ip:" + (context.Connection.RemoteIpAddress?
+                    .ToString() ?? "unknown"),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
     options.RejectionStatusCode = 429;
 
     options.OnRejected = async (context, token) =>
@@ -281,6 +347,8 @@ builder.Services.AddRateLimiter(options =>
                         context.HttpContext.TraceIdentifier
                 }
             },
+            options: null,
+            contentType: "application/problem+json",
             cancellationToken: token);
     };
 });
@@ -288,6 +356,20 @@ builder.Services.AddRateLimiter(options =>
 // ========================================
 // 7. CONSTRUIR APLICACION
 // ========================================
+
+Rutitas.Api.Services.AccountDeletionWorkerRegistration
+    .AddAccountDeletionExecution(builder);
+
+builder.Services.AddSingleton<
+    Rutitas.Api.Services.AccountDeletionReadiness>();
+
+builder.Services.AddSingleton<
+    Rutitas.Api.Services.IAccountDeletionAdmission>(
+        sp => sp.GetRequiredService<
+            Rutitas.Api.Services.AccountDeletionReadiness>());
+
+builder.Services.AddScoped<
+    Rutitas.Api.Services.AccountDeletionAdmissionFilter>();
 
 var app = builder.Build();
 
@@ -452,8 +534,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseRateLimiter();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 // ========================================

@@ -1,4 +1,4 @@
-﻿
+
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -376,6 +376,11 @@ public sealed class AuthController : ControllerBase
                 user.Email),
 
             new Claim("role", user.Role),
+
+            new Claim(
+                "sessionVersion",
+                user.SessionVersion.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture)),
 
             new Claim(
                 JwtRegisteredClaimNames.Jti,

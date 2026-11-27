@@ -30,6 +30,35 @@ public class ApiFlowTests
         Assert.Equal(HttpStatusCode.NoContent,(await client.PostAsync("/api/v1/auth/logout",null)).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized,(await client.GetAsync("/api/v1/users/me")).StatusCode);
     }
+    [Fact]
+    public async Task LogoutRevocationStoreFailure_Returns503AndKeepsTokenUnrevoked()
+    {
+        using var app = new TestApiFactory();
+        using var client = app.CreateClient();
+
+        var token = await SignIn(client);
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+
+        app.Revocations.FailOnWrite = true;
+
+        var logout = await client.PostAsync(
+            "/api/v1/auth/logout",
+            null);
+
+        Assert.Equal(
+            HttpStatusCode.ServiceUnavailable,
+            logout.StatusCode);
+
+        // El fallo ocurre antes de persistir la revocacion.
+        // El token debe continuar vigente.
+        var profile = await client.GetAsync("/api/v1/users/me");
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            profile.StatusCode);
+    }
     [Fact] public async Task RoutesListAndDetailsWork()
     {
         using var app=new TestApiFactory();using var client=app.CreateClient();var token=await SignIn(client);

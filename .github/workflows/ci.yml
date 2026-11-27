@@ -156,6 +156,40 @@ jobs:
           if count:
               raise SystemExit('Revisar vulnerabilidades NuGet antes de integrar.')
           PY
+      - name: Preparar MongoDB replica set aislado
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker run -d --rm \
+            --name rutitas-delete001-ci \
+            -p 127.0.0.1:27018:27017 \
+            mongo:7.0 \
+            --replSet rs0 --bind_ip_all
+
+          for attempt in $(seq 1 60); do
+            if docker exec rutitas-delete001-ci mongosh --quiet \
+              --eval 'db.adminCommand({ping:1}).ok' 2>/dev/null | grep -qx '1'; then
+              break
+            fi
+            sleep 2
+          done
+
+          docker exec rutitas-delete001-ci mongosh --quiet \
+            --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]})'
+
+          for attempt in $(seq 1 60); do
+            if docker exec rutitas-delete001-ci mongosh --quiet \
+              --eval 'db.hello().isWritablePrimary' 2>/dev/null | grep -qx 'true'; then
+              echo "RUTITAS_DELETE001_TEST_MONGO=mongodb://127.0.0.1:27018/?directConnection=true&replicaSet=rs0" >> "$GITHUB_ENV"
+              echo "MongoDB replica set ready."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "::error::MongoDB replica set not ready."
+          exit 1
       - name: Ejecutar exactamente cinco suites con TRX y Cobertura
         shell: bash
         run: |
@@ -178,6 +212,10 @@ jobs:
               --collect:"XPlat Code Coverage"
             echo "::endgroup::"
           done
+      - name: Retirar MongoDB aislado
+        if: always()
+        shell: bash
+        run: docker rm -f rutitas-delete001-ci 2>/dev/null || true
       - name: Conservar TRX y cobertura
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f

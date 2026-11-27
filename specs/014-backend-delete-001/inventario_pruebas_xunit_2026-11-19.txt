@@ -1,0 +1,153 @@
+BACKEND-DELETE-001 - INVENTARIO DE PRUEBAS XUNIT
+Fecha documental: 19/11/2026
+Inventario de descubrimiento, no evidencia de ejecucion.
+
+=== Rutitas.UnitTests ===
+Serie de pruebas para C:\Users\POTTE\Downloads\Rutitas_BackEnd_DELETE_001\Rutitas.Api\tests\Rutitas.UnitTests\bin\Debug\net10.0\Rutitas.UnitTests.dll (.NETCoreApp,Version=v10.0)
+Las siguientes pruebas est├ín disponibles:
+    Rutitas.UnitTests.AccountDeletionControllerTests.ValidAccount_Returns202WithContractFields
+    Rutitas.UnitTests.AccountDeletionControllerTests.InvalidClaims_Return401(userId: null, version: "1")
+    Rutitas.UnitTests.AccountDeletionControllerTests.InvalidClaims_Return401(userId: "507f1f77bcf86cd799439011", version: null)
+    Rutitas.UnitTests.AccountDeletionControllerTests.InvalidClaims_Return401(userId: "507f1f77bcf86cd799439011", version: "abc")
+    Rutitas.UnitTests.AccountDeletionControllerTests.InvalidClaims_Return401(userId: "507f1f77bcf86cd799439011", version: "0")
+    Rutitas.UnitTests.AccountDeletionControllerTests.RepositoryConflict_Return409
+    Rutitas.UnitTests.AccountDeletionControllerTests.MongoFailure_Return503
+    Rutitas.UnitTests.AccountDeletionControllerTests.MissingDeletionDates_Return503
+    Rutitas.UnitTests.AccountDeletionControllerTests.FixedClock_IsPassedToDeletionRepository
+    Rutitas.UnitTests.ControllerUnitTests.Register_RejectsInvalidData(email: "bad", password: "ValidPassword123!", name: "Alumno")
+    Rutitas.UnitTests.ControllerUnitTests.Register_RejectsInvalidData(email: "alumno@example.com", password: "short", name: "Alumno")
+    Rutitas.UnitTests.ControllerUnitTests.Register_RejectsInvalidData(email: "alumno@example.com", password: "ValidPassword123!", name: "")
+    Rutitas.UnitTests.ControllerUnitTests.Register_RejectsDuplicateEmail
+    Rutitas.UnitTests.ControllerUnitTests.Register_ForcesUserRole
+    Rutitas.UnitTests.ControllerUnitTests.Login_RejectsMissingAccount
+    Rutitas.UnitTests.ControllerUnitTests.Login_RejectsIncorrectPassword
+    Rutitas.UnitTests.ControllerUnitTests.Login_ReturnsJwtForValidUser
+    Rutitas.UnitTests.ControllerUnitTests.Logout_RevokesToken
+    Rutitas.UnitTests.ControllerUnitTests.Logout_RejectsTokenWithoutJti
+    Rutitas.UnitTests.ControllerUnitTests.GetMe_ReturnsOwnProfile
+    Rutitas.UnitTests.ControllerUnitTests.GetMe_RejectsMissingUser
+    Rutitas.UnitTests.ControllerUnitTests.UpdateMe_RejectsPrivilegeEscalation
+    Rutitas.UnitTests.ControllerUnitTests.UpdateMe_UpdatesOnlyAllowedFields
+    Rutitas.UnitTests.ControllerUnitTests.Routes_RejectsInvalidPagination(page: 0, size: 20)
+    Rutitas.UnitTests.ControllerUnitTests.Routes_RejectsInvalidPagination(page: 1, size: 101)
+    Rutitas.UnitTests.ControllerUnitTests.Routes_RejectsInvalidPagination(page: -1, size: 20)
+    Rutitas.UnitTests.ControllerUnitTests.Routes_ListsVisibleRoutes
+    Rutitas.UnitTests.ControllerUnitTests.RouteById_RejectsInvalidId(id: "bad")
+    Rutitas.UnitTests.ControllerUnitTests.RouteById_RejectsInvalidId(id: "123")
+    Rutitas.UnitTests.ControllerUnitTests.RouteById_Returns404IfMissing
+    Rutitas.UnitTests.ControllerUnitTests.RouteById_ReturnsDetails
+    Rutitas.UnitTests.Endpoints.EndpointUnitCoverageTests.UT_AuthEndpoint_ExposesExpectedPostRoute(controller: typeof(Rutitas.Api.Controllers.AuthController), action: "Register", expectedRoute: "register")
+    Rutitas.UnitTests.Endpoints.EndpointUnitCoverageTests.UT_AuthEndpoint_ExposesExpectedPostRoute(controller: typeof(Rutitas.Api.Controllers.AuthController), action: "Login", expectedRoute: "login")
+    Rutitas.UnitTests.Endpoints.EndpointUnitCoverageTests.UT_AuthEndpoint_ExposesExpectedPostRoute(controller: typeof(Rutitas.Api.Controllers.AuthController), action: "Logout", expectedRoute: "logout")
+    Rutitas.UnitTests.Endpoints.EndpointUnitCoverageTests.UT_ProfileEndpoint_ExposesExpectedRoute(action: "GetMe", route: "me")
+    Rutitas.UnitTests.Endpoints.EndpointUnitCoverageTests.UT_ProfileEndpoint_ExposesExpectedRoute(action: "UpdateMe", route: "me")
+    Rutitas.UnitTests.Endpoints.EndpointUnitCoverageTests.UT_ListRoutes_UsesGet
+    Rutitas.UnitTests.Endpoints.EndpointUnitCoverageTests.UT_RouteDetail_UsesIdGet
+
+=== Rutitas.SecurityTests ===
+Serie de pruebas para C:\Users\POTTE\Downloads\Rutitas_BackEnd_DELETE_001\Rutitas.Api\tests\Rutitas.SecurityTests\bin\Debug\net10.0\Rutitas.SecurityTests.dll (.NETCoreApp,Version=v10.0)
+Las siguientes pruebas est├ín disponibles:
+    Rutitas.SecurityTests.JwtValidationTests.InvalidJwtClaims_AreRejected(issuer: "other-issuer", audience: "Rutitas.Mobile", expired: False, includeJti: True)
+    Rutitas.SecurityTests.JwtValidationTests.InvalidJwtClaims_AreRejected(issuer: "Rutitas.Api", audience: "other-audience", expired: False, includeJti: True)
+    Rutitas.SecurityTests.JwtValidationTests.InvalidJwtClaims_AreRejected(issuer: "Rutitas.Api", audience: "Rutitas.Mobile", expired: True, includeJti: True)
+    Rutitas.SecurityTests.JwtValidationTests.InvalidJwtClaims_AreRejected(issuer: "Rutitas.Api", audience: "Rutitas.Mobile", expired: False, includeJti: False)
+    Rutitas.SecurityTests.JwtValidationTests.SignedJwtWithoutSubjectIsRejectedWithValidControl
+    Rutitas.SecurityTests.JwtValidationTests.JwtWithoutSessionVersion_IsRejected
+    Rutitas.SecurityTests.JwtValidationTests.OldSessionVersion_RemainsInvalidAfterVersionChange
+    Rutitas.SecurityTests.JwtValidationTests.RevocationStoreFailure_FailsClosed
+    Rutitas.SecurityTests.JwtValidationTests.InactiveUser_CannotAccessRoutesWithValidToken
+    Rutitas.SecurityTests.SecurityTests.ProtectedEndpoint_RequiresToken(url: "/api/v1/users/me")
+    Rutitas.SecurityTests.SecurityTests.ProtectedEndpoint_RequiresToken(url: "/api/v1/routes")
+    Rutitas.SecurityTests.SecurityTests.ProtectedEndpoint_RequiresToken(url: "/api/v1/routes/507f1f77bcf86cd799439012")
+    Rutitas.SecurityTests.SecurityTests.ForgedJwt_IsRejected
+    Rutitas.SecurityTests.SecurityTests.EscalationByMassAssignment_IsRejected
+    Rutitas.SecurityTests.SecurityTests.Routes_RejectInvalidInputs(q: "?page=0")
+    Rutitas.SecurityTests.SecurityTests.Routes_RejectInvalidInputs(q: "?pageSize=101")
+    Rutitas.SecurityTests.SecurityTests.LoginRateLimit_RejectsSixthRequest
+    Rutitas.SecurityTests.SecurityTests.NoSecretsInLoginError
+    Rutitas.SecurityTests.SecurityTests.RouteDetailRateLimit_RejectsExcessRequests
+    Rutitas.SecurityTests.Endpoints.EndpointSecurityTests.SEC_01_Register_RejectsShortPassword
+    Rutitas.SecurityTests.Endpoints.EndpointSecurityTests.SEC_02_Login_RejectsIncorrectPassword
+    Rutitas.SecurityTests.Endpoints.EndpointSecurityTests.SEC_03_GetProfile_RejectsAnonymous
+    Rutitas.SecurityTests.Endpoints.EndpointSecurityTests.SEC_04_PatchProfile_RejectsRoleEscalation
+    Rutitas.SecurityTests.Endpoints.EndpointSecurityTests.SEC_05_Logout_RejectsAnonymous
+    Rutitas.SecurityTests.Endpoints.EndpointSecurityTests.SEC_06_ListRoutes_RejectsForgedJwt
+    Rutitas.SecurityTests.Endpoints.EndpointSecurityTests.SEC_07_GetRouteById_RejectsInvalidIdentifier
+
+=== Rutitas.ContractTests ===
+Serie de pruebas para C:\Users\POTTE\Downloads\Rutitas_BackEnd_DELETE_001\Rutitas.Api\tests\Rutitas.ContractTests\bin\Debug\net10.0\Rutitas.ContractTests.dll (.NETCoreApp,Version=v10.0)
+Las siguientes pruebas est├ín disponibles:
+    Rutitas.ContractTests.DeletionV04RouteContractTests.DeletionRoutes_MatchVersion04(controllerType: typeof(Rutitas.Api.Controllers.AccountDeletionController), methodName: "ScheduleDeletion", controllerRoute: "api/v1/users", actionRoute: "me", httpMethod: "DELETE")
+    Rutitas.ContractTests.DeletionV04RouteContractTests.DeletionRoutes_MatchVersion04(controllerType: typeof(Rutitas.Api.Controllers.DeletionStatusController), methodName: "GetStatus", controllerRoute: "api/v1/users/me/deletion", actionRoute: "", httpMethod: "GET")
+    Rutitas.ContractTests.DeletionV04RouteContractTests.DeletionRoutes_MatchVersion04(controllerType: typeof(Rutitas.Api.Controllers.DeletionRecoveryController), methodName: "Recover", controllerRoute: "api/v1/auth/deletion", actionRoute: "recovery", httpMethod: "POST")
+    Rutitas.ContractTests.DeletionV04RouteContractTests.DeletionRoutes_MatchVersion04(controllerType: typeof(Rutitas.Api.Controllers.DeletionCancellationController), methodName: "Cancel", controllerRoute: "api/v1/users/me/deletion/cancel", actionRoute: "", httpMethod: "POST")
+    Rutitas.ContractTests.DeletionV04RouteContractTests.Scheduling_RequiresOrdinaryAuthentication
+    Rutitas.ContractTests.DeletionV04RouteContractTests.RecoveryEndpoints_UseRestrictedTokenHandling
+    Rutitas.ContractTests.RouteContractTests.VersionedRoutes_RemainCompatible
+    Rutitas.ContractTests.RouteContractTests.ProtectedControllersRequireAuthentication
+    Rutitas.ContractTests.RouteContractTests.ExposesExactlySevenPlannedActions
+
+=== Rutitas.ArchitectureTests ===
+Serie de pruebas para C:\Users\POTTE\Downloads\Rutitas_BackEnd_DELETE_001\Rutitas.Api\tests\Rutitas.ArchitectureTests\bin\Debug\net10.0\Rutitas.ArchitectureTests.dll (.NETCoreApp,Version=v10.0)
+Las siguientes pruebas est├ín disponibles:
+    Rutitas.ArchitectureTests.LayerTests.DomainDoesNotReferenceMongoDriver
+    Rutitas.ArchitectureTests.LayerTests.ApplicationDoesNotReferenceWebFramework
+
+=== Rutitas.IntegrationTests ===
+Serie de pruebas para C:\Users\POTTE\Downloads\Rutitas_BackEnd_DELETE_001\Rutitas.Api\tests\Rutitas.IntegrationTests\bin\Debug\net10.0\Rutitas.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+Las siguientes pruebas est├ín disponibles:
+    Rutitas.IntegrationTests.AccountDeletionHttpTests.DeleteWithoutJwt_Returns401
+    Rutitas.IntegrationTests.AccountDeletionHttpTests.DeleteWithValidJwt_Returns202AndBlocksOldSession
+    Rutitas.IntegrationTests.AccountDeletionMongoTests.ScheduleDeletion_StoresAtomicTransition
+    Rutitas.IntegrationTests.AccountDeletionMongoTests.RepeatedRequest_DoesNotExtendDeadline
+    Rutitas.IntegrationTests.AccountDeletionMongoTests.ConcurrentRequests_OnlyOneTransitionWins
+    Rutitas.IntegrationTests.AccountDeletionMongoTests.OutdatedSessionVersion_CannotScheduleDeletion
+    Rutitas.IntegrationTests.AccountDeletionMongoTests.InactiveUser_CannotScheduleDeletion
+    Rutitas.IntegrationTests.AccountDeletionMongoTests.NonUtcDate_IsRejectedWithoutMutation
+    Rutitas.IntegrationTests.ApiFlowTests.RegistrationAndLoginAndProfile_Work
+    Rutitas.IntegrationTests.ApiFlowTests.LogoutRevokesJwt
+    Rutitas.IntegrationTests.ApiFlowTests.RoutesListAndDetailsWork
+    Rutitas.IntegrationTests.DeletionCancellationHttpTests.ValidToken_RestoresAccountAndConsumesToken
+    Rutitas.IntegrationTests.DeletionCancellationHttpTests.ExpiredDeletionDeadline_Returns410
+    Rutitas.IntegrationTests.DeletionCancellationHttpTests.AtomicCancellationConflict_Returns409
+    Rutitas.IntegrationTests.DeletionCancellationHttpTests.DeadlineChangesDuringCancellation_Returns410
+    Rutitas.IntegrationTests.DeletionCancellationHttpTests.ParallelCancellation_OnlyOneSucceeds
+    Rutitas.IntegrationTests.DeletionCancellationHttpTests.FailureDuringStatusRead_Returns503ProblemDetails
+    Rutitas.IntegrationTests.DeletionCancellationMongoTests.ParallelCancellation_OnlyOneMongoUpdateWins
+    Rutitas.IntegrationTests.DeletionCancellationMongoTests.ReusedToken_CannotCancelAgain
+    Rutitas.IntegrationTests.DeletionCancellationMongoTests.ExpiredToken_CannotRestoreAccount
+    Rutitas.IntegrationTests.DeletionCancellationMongoTests.ReissuedToken_InvalidatesOldHash
+    Rutitas.IntegrationTests.DeletionCancellationMongoTests.DifferentUsers_CannotBeCancelledWithAnotherToken
+    Rutitas.IntegrationTests.DeletionCancellationMongoTests.ExactlyAtSevenDays_CancellationIsRejected
+    Rutitas.IntegrationTests.DeletionCancellationMongoTests.OneSecondBeforeSevenDays_CancellationSucceeds
+    Rutitas.IntegrationTests.DeletionIssueServerClockMongoTests.StaleClock_CannotIssueTokenAfterDeletionDeadline
+    Rutitas.IntegrationTests.DeletionMultiUserHttpTests.TwoUsers_RecoveryTokensRemainIndependent
+    Rutitas.IntegrationTests.DeletionProblemDetailsHttpTests.MissingRecoveryToken_Returns401ProblemDetails(method: "GET", url: "/api/v1/users/me/deletion")
+    Rutitas.IntegrationTests.DeletionProblemDetailsHttpTests.MissingRecoveryToken_Returns401ProblemDetails(method: "POST", url: "/api/v1/users/me/deletion/cancel")
+    Rutitas.IntegrationTests.DeletionRateLimitContractHttpTests.Status_Request31_Returns429ProblemDetails
+    Rutitas.IntegrationTests.DeletionRateLimitContractHttpTests.Recovery_Request6_Returns429ProblemDetails
+    Rutitas.IntegrationTests.DeletionRateLimitingHttpTests.StatusEndpoint_Request31_Returns429
+    Rutitas.IntegrationTests.DeletionRateLimitingHttpTests.StatusEndpoint_429_HasRetryAfter
+    Rutitas.IntegrationTests.DeletionRecoveryHttpTests.PendingAccount_CanGetOpaqueRecoveryToken
+    Rutitas.IntegrationTests.DeletionRecoveryHttpTests.WrongPassword_Returns401
+    Rutitas.IntegrationTests.DeletionRecoveryHttpTests.ActiveAccount_CannotGetRecoveryToken
+    Rutitas.IntegrationTests.DeletionRecoveryHttpTests.UnknownAccount_ReturnsGeneric401
+    Rutitas.IntegrationTests.DeletionRecoveryHttpTests.NewRecoveryToken_InvalidatesPreviousHash
+    Rutitas.IntegrationTests.DeletionRecoveryHttpTests.UnknownAndWrongPassword_HaveSamePublicResponse
+    Rutitas.IntegrationTests.DeletionServerClockMongoTests.StaleApplicationClock_CannotCancelExpiredDeletion
+    Rutitas.IntegrationTests.DeletionStatusHttpTests.ValidRecoveryToken_ReturnsStatusWithoutConsumingIt
+    Rutitas.IntegrationTests.DeletionStatusHttpTests.WithoutRecoveryToken_Returns401
+    Rutitas.IntegrationTests.DeletionStatusHttpTests.InvalidRecoveryToken_Returns401
+    Rutitas.IntegrationTests.DeletionStatusHttpTests.ExpiredRecoveryToken_Returns401
+    Rutitas.IntegrationTests.DeletionStatusHttpTests.AfterDeletionDeadline_RecoveryIsNotAllowed
+    Rutitas.IntegrationTests.DeletionStatusHttpTests.DeletingAccount_Returns410
+    Rutitas.IntegrationTests.MongoRepositoryTests.Mongo_Usuario_SeGuardaYConsulta
+    Rutitas.IntegrationTests.MongoRepositoryTests.Mongo_Rutas_FiltraLasPublicas
+    Rutitas.IntegrationTests.MongoRepositoryTests.Mongo_Token_SeRevocaCorrectamente
+    Rutitas.IntegrationTests.Endpoints.EndpointIntegrationTests.IT_01_Register_Returns201AndPublicProfile
+    Rutitas.IntegrationTests.Endpoints.EndpointIntegrationTests.IT_02_Login_ReturnsBearerToken
+    Rutitas.IntegrationTests.Endpoints.EndpointIntegrationTests.IT_03_GetProfile_ReturnsAuthenticatedUser
+    Rutitas.IntegrationTests.Endpoints.EndpointIntegrationTests.IT_04_PatchProfile_UpdatesDisplayName
+    Rutitas.IntegrationTests.Endpoints.EndpointIntegrationTests.IT_05_Logout_RevokesPreviouslyValidToken
+    Rutitas.IntegrationTests.Endpoints.EndpointIntegrationTests.IT_06_ListRoutes_ReturnsPagedJson
+    Rutitas.IntegrationTests.Endpoints.EndpointIntegrationTests.IT_07_GetRouteById_ReturnsDetail
