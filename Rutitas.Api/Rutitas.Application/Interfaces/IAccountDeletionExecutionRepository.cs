@@ -1,4 +1,4 @@
-﻿using Rutitas.Domain.Entities;
+using Rutitas.Domain.Entities;
 
 namespace Rutitas.Application.Interfaces;
 
@@ -15,6 +15,13 @@ public interface IAccountDeletionExecutionRepository
 
     Task<AccountDeletionJob?> TryClaimNextAsync(
         string workerId,
+        TimeSpan leaseDuration,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> TryRenewLeaseAsync(
+        string jobId,
+        string workerId,
+        long leaseVersion,
         TimeSpan leaseDuration,
         CancellationToken cancellationToken = default);
 

@@ -310,6 +310,22 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
+    // DELETE-001: limite por usuario autenticado.
+    options.AddPolicy("account-deletion", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.User.Identity?.IsAuthenticated == true &&
+            context.User.FindFirst("sub") is { } subject
+                ? "user:" + subject.Value
+                : "ip:" + (context.Connection.RemoteIpAddress?
+                    .ToString() ?? "unknown"),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
     options.RejectionStatusCode = 429;
 
     options.OnRejected = async (context, token) =>
@@ -343,6 +359,17 @@ builder.Services.AddRateLimiter(options =>
 
 Rutitas.Api.Services.AccountDeletionWorkerRegistration
     .AddAccountDeletionExecution(builder);
+
+builder.Services.AddSingleton<
+    Rutitas.Api.Services.AccountDeletionReadiness>();
+
+builder.Services.AddSingleton<
+    Rutitas.Api.Services.IAccountDeletionAdmission>(
+        sp => sp.GetRequiredService<
+            Rutitas.Api.Services.AccountDeletionReadiness>());
+
+builder.Services.AddScoped<
+    Rutitas.Api.Services.AccountDeletionAdmissionFilter>();
 
 var app = builder.Build();
 
@@ -507,8 +534,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseRateLimiter();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 // ========================================

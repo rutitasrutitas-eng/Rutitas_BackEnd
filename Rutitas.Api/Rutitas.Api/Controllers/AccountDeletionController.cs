@@ -2,6 +2,8 @@ using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Rutitas.Api.Services;
 using MongoDB.Driver;
 using Rutitas.Application.Interfaces;
 
@@ -30,6 +32,8 @@ public sealed class AccountDeletionController : ControllerBase
     // DELETE /api/v1/users/me
 
     [HttpDelete("me")]
+    [EnableRateLimiting("account-deletion")]
+    [ServiceFilter(typeof(AccountDeletionAdmissionFilter))]
     public async Task<IActionResult> ScheduleDeletion(
         CancellationToken cancellationToken)
     {

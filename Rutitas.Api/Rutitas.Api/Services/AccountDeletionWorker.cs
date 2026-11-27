@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,6 +13,7 @@ public sealed class AccountDeletionWorker : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<AccountDeletionWorker> _logger;
     private readonly AccountDeletionWorkerOptions _options;
+    private readonly AccountDeletionReadiness? _readiness;
 
     private readonly string _workerId =
         Guid.NewGuid().ToString("N");
@@ -20,11 +21,13 @@ public sealed class AccountDeletionWorker : BackgroundService
     public AccountDeletionWorker(
         IServiceScopeFactory scopeFactory,
         ILogger<AccountDeletionWorker> logger,
-        IOptions<AccountDeletionWorkerOptions> options)
+        IOptions<AccountDeletionWorkerOptions> options,
+        AccountDeletionReadiness? readiness = null)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
         _options = options.Value;
+        _readiness = readiness;
     }
 
     protected override async Task ExecuteAsync(
@@ -34,6 +37,12 @@ public sealed class AccountDeletionWorker : BackgroundService
         {
             return;
         }
+
+        _readiness?.MarkUnavailable();
+
+        using var shutdownRegistration =
+            stoppingToken.Register(() =>
+                _readiness?.MarkStopped());
 
         var initialized = false;
 
@@ -58,9 +67,15 @@ public sealed class AccountDeletionWorker : BackgroundService
                     initialized = true;
                 }
 
+                await repository.EnsureTransactionCapabilityAsync(
+                    stoppingToken);
+
                 await repository.DiscoverDueAccountsAsync(
                     _options.BatchSize,
                     stoppingToken);
+
+                stoppingToken.ThrowIfCancellationRequested();
+                _readiness?.MarkReady();
 
                 for (var i = 0;
                      i < _options.BatchSize;
@@ -92,12 +107,14 @@ public sealed class AccountDeletionWorker : BackgroundService
             }
             catch (MongoException)
             {
+                _readiness?.MarkUnavailable();
                 // No registrar mensajes que puedan incluir datos.
                 _logger.LogWarning(
                     "Deletion worker database operation failed.");
             }
             catch (Exception)
             {
+                _readiness?.MarkUnavailable();
                 _logger.LogError(
                     "Deletion worker cycle failed.");
             }
@@ -118,6 +135,36 @@ public sealed class AccountDeletionWorker : BackgroundService
 
         _logger.LogInformation(
             "Account deletion test worker stopped.");
+        _readiness?.MarkStopped();
+    }
+
+    private async Task<bool> ExecuteWithinLeaseBudgetAsync(
+        Func<CancellationToken, Task<bool>> operation,
+        long stageStarted,
+        CancellationToken cancellationToken)
+    {
+        var budget = TimeSpan.FromSeconds(
+            Math.Min(
+                30,
+                _options.LeaseDurationSeconds / 2.0));
+
+        var remaining = budget -
+            System.Diagnostics.Stopwatch.GetElapsedTime(
+                stageStarted);
+
+        if (remaining <= TimeSpan.Zero)
+        {
+            throw new TimeoutException(
+                "Deletion stage budget exhausted.");
+        }
+
+        using var timeout =
+            CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken);
+
+        timeout.CancelAfter(remaining);
+
+        return await operation(timeout.Token);
     }
 
     private async Task ProcessJobAsync(
@@ -127,34 +174,95 @@ public sealed class AccountDeletionWorker : BackgroundService
     {
         try
         {
-            var begun = await repository
-                .TryBeginAccountDeletionAsync(
+            var stageStarted = System.Diagnostics.Stopwatch.GetTimestamp();
+
+            if (!await repository.TryRenewLeaseAsync(
                     job.Id,
                     _workerId,
                     job.LeaseVersion,
-                    ct);
+                    TimeSpan.FromSeconds(
+                        _options.LeaseDurationSeconds),
+                    ct))
+            {
+                _readiness?.MarkUnavailable();
+
+                _logger.LogWarning(
+                    "Deletion job lease unavailable.");
+
+                return;
+            }
+
+            var begun = await ExecuteWithinLeaseBudgetAsync(
+                token => repository.TryBeginAccountDeletionAsync(
+                    job.Id,
+                    _workerId,
+                    job.LeaseVersion,
+                    token),
+                stageStarted,
+                ct);
 
             if (!begun)
             {
                 return;
             }
 
-            var removed = await repository
-                .TryDeleteClaimedAccountAsync(
+            stageStarted = System.Diagnostics.Stopwatch.GetTimestamp();
+
+            if (!await repository.TryRenewLeaseAsync(
                     job.Id,
                     _workerId,
                     job.LeaseVersion,
-                    ct);
+                    TimeSpan.FromSeconds(
+                        _options.LeaseDurationSeconds),
+                    ct))
+            {
+                _readiness?.MarkUnavailable();
+
+                _logger.LogWarning(
+                    "Deletion job lease unavailable.");
+
+                return;
+            }
+
+            var removed = await ExecuteWithinLeaseBudgetAsync(
+                token => repository.TryDeleteClaimedAccountAsync(
+                    job.Id,
+                    _workerId,
+                    job.LeaseVersion,
+                    token),
+                stageStarted,
+                ct);
 
             if (!removed)
             {
                 return;
             }
 
-            var completed = await repository.TryCompleteAsync(
-                job.Id,
-                _workerId,
-                job.LeaseVersion,
+            stageStarted = System.Diagnostics.Stopwatch.GetTimestamp();
+
+            if (!await repository.TryRenewLeaseAsync(
+                    job.Id,
+                    _workerId,
+                    job.LeaseVersion,
+                    TimeSpan.FromSeconds(
+                        _options.LeaseDurationSeconds),
+                    ct))
+            {
+                _readiness?.MarkUnavailable();
+
+                _logger.LogWarning(
+                    "Deletion job lease unavailable.");
+
+                return;
+            }
+
+            var completed = await ExecuteWithinLeaseBudgetAsync(
+                token => repository.TryCompleteAsync(
+                    job.Id,
+                    _workerId,
+                    job.LeaseVersion,
+                    token),
+                stageStarted,
                 ct);
 
             if (completed)
@@ -171,6 +279,7 @@ public sealed class AccountDeletionWorker : BackgroundService
         }
         catch (MongoException)
         {
+            _readiness?.MarkUnavailable();
             await ScheduleRetrySafelyAsync(
                 repository,
                 job,
@@ -179,6 +288,7 @@ public sealed class AccountDeletionWorker : BackgroundService
         }
         catch (Exception)
         {
+            _readiness?.MarkUnavailable();
             await ScheduleRetrySafelyAsync(
                 repository,
                 job,
@@ -230,6 +340,7 @@ public sealed class AccountDeletionWorker : BackgroundService
         }
         catch (Exception)
         {
+            _readiness?.MarkUnavailable();
             // Si no se puede persistir el reintento,
             // el lease vencido permite reconciliar el trabajo.
             _logger.LogWarning(

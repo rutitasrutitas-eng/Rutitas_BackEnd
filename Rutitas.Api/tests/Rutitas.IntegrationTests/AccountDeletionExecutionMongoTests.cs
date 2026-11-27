@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
@@ -466,6 +466,409 @@ public sealed class AccountDeletionExecutionMongoTests
         Assert.Equal(
             AccountDeletionJobStates.Completed,
             completed.Status);
+    }
+
+    [Fact]
+    public async Task LeaseRenewal_ExtendsWithoutChangingFence()
+    {
+        var database = CreateDatabase();
+        var repository = await RepositoryAsync(database);
+
+        await SeedAsync(database);
+        await repository.DiscoverDueAccountsAsync(20);
+
+        var job = await repository.TryClaimNextAsync(
+            "worker-a", TimeSpan.FromSeconds(30));
+
+        Assert.NotNull(job);
+
+        Assert.True(await repository.TryRenewLeaseAsync(
+            job.Id,
+            "worker-a",
+            job.LeaseVersion,
+            TimeSpan.FromMinutes(2)));
+
+        var renewed = await database
+            .GetCollection<AccountDeletionJob>(
+                "account_deletion_jobs")
+            .Find(x => x.Id == job.Id)
+            .SingleAsync();
+
+        Assert.Equal(job.LeaseVersion, renewed.LeaseVersion);
+        Assert.Equal(job.LeaseOwner, renewed.LeaseOwner);
+        Assert.Equal(job.AttemptCount, renewed.AttemptCount);
+
+        Assert.True(
+            renewed.LeaseExpiresAtUtc >
+            job.LeaseExpiresAtUtc);
+
+        Assert.Null(await repository.TryClaimNextAsync(
+            "worker-b", TimeSpan.FromMinutes(2)));
+    }
+
+    [Fact]
+    public async Task LeaseRenewal_WrongOwnerOrVersionRejected()
+    {
+        var database = CreateDatabase();
+        var repository = await RepositoryAsync(database);
+
+        await SeedAsync(database);
+        await repository.DiscoverDueAccountsAsync(20);
+
+        var job = await repository.TryClaimNextAsync(
+            "worker-a", TimeSpan.FromMinutes(2));
+
+        Assert.NotNull(job);
+
+        Assert.False(await repository.TryRenewLeaseAsync(
+            job.Id,
+            "worker-b",
+            job.LeaseVersion,
+            TimeSpan.FromMinutes(2)));
+
+        Assert.False(await repository.TryRenewLeaseAsync(
+            job.Id,
+            "worker-a",
+            job.LeaseVersion + 1,
+            TimeSpan.FromMinutes(2)));
+
+        var persisted = await database
+            .GetCollection<AccountDeletionJob>(
+                "account_deletion_jobs")
+            .Find(x => x.Id == job.Id)
+            .SingleAsync();
+
+        Assert.Equal(
+            job.LeaseExpiresAtUtc,
+            persisted.LeaseExpiresAtUtc);
+    }
+
+    [Fact]
+    public async Task ExpiredLease_CannotRenewOrDeleteBeforeReclaim()
+    {
+        var database = CreateDatabase();
+        var repository = await RepositoryAsync(database);
+
+        var target = await SeedAsync(database);
+        await repository.DiscoverDueAccountsAsync(20);
+
+        var job = await repository.TryClaimNextAsync(
+            "worker-old", TimeSpan.FromMinutes(2));
+
+        Assert.NotNull(job);
+
+        Assert.True(
+            await repository.TryBeginAccountDeletionAsync(
+                job.Id,
+                "worker-old",
+                job.LeaseVersion));
+
+        var jobs = database
+            .GetCollection<AccountDeletionJob>(
+                "account_deletion_jobs");
+
+        await jobs.UpdateOneAsync(
+            x => x.Id == job.Id,
+            Builders<AccountDeletionJob>.Update.Set(
+                x => x.LeaseExpiresAtUtc,
+                DateTime.UtcNow.AddMinutes(-1)));
+
+        Assert.False(await repository.TryRenewLeaseAsync(
+            job.Id,
+            "worker-old",
+            job.LeaseVersion,
+            TimeSpan.FromMinutes(2)));
+
+        Assert.False(
+            await repository.TryDeleteClaimedAccountAsync(
+                job.Id,
+                "worker-old",
+                job.LeaseVersion));
+
+        var users = new MongoUserRepository(database);
+
+        Assert.NotNull(await users.GetByIdAsync(target.Id));
+
+        var reclaimed = await repository.TryClaimNextAsync(
+            "worker-new", TimeSpan.FromMinutes(2));
+
+        Assert.NotNull(reclaimed);
+
+        Assert.True(
+            reclaimed.LeaseVersion > job.LeaseVersion);
+
+        Assert.False(await repository.TryRenewLeaseAsync(
+            job.Id,
+            "worker-old",
+            job.LeaseVersion,
+            TimeSpan.FromMinutes(2)));
+
+        await ExecuteJobAsync(
+            repository, reclaimed, "worker-new");
+
+        Assert.Null(await users.GetByIdAsync(target.Id));
+    }
+
+    [Fact]
+    public async Task LeaseRenewal_DoesNotShortenExistingLease()
+    {
+        var database = CreateDatabase();
+        var repository = await RepositoryAsync(database);
+
+        await SeedAsync(database);
+        await repository.DiscoverDueAccountsAsync(20);
+
+        var job = await repository.TryClaimNextAsync(
+            "worker-a", TimeSpan.FromMinutes(5));
+
+        Assert.NotNull(job);
+
+        Assert.True(await repository.TryRenewLeaseAsync(
+            job.Id,
+            "worker-a",
+            job.LeaseVersion,
+            TimeSpan.FromSeconds(30)));
+
+        var renewed = await database
+            .GetCollection<AccountDeletionJob>(
+                "account_deletion_jobs")
+            .Find(x => x.Id == job.Id)
+            .SingleAsync();
+
+        Assert.Equal(
+            job.LeaseExpiresAtUtc,
+            renewed.LeaseExpiresAtUtc);
+    }
+
+    [Fact]
+    public async Task StaleTransaction_CannotCommitAfterReclaim()
+    {
+        var database = CreateDatabase();
+        var repository = await RepositoryAsync(database);
+
+        var target = await SeedAsync(database);
+
+        await repository.DiscoverDueAccountsAsync(20);
+
+        var first = await repository.TryClaimNextAsync(
+            "worker-old", TimeSpan.FromMinutes(2));
+
+        Assert.NotNull(first);
+
+        Assert.True(
+            await repository.TryBeginAccountDeletionAsync(
+                first.Id,
+                "worker-old",
+                first.LeaseVersion));
+
+        var jobs = database.GetCollection<AccountDeletionJob>(
+            "account_deletion_jobs");
+
+        var users = database.GetCollection<User>("users");
+
+        using var timeout = new CancellationTokenSource(
+            TimeSpan.FromSeconds(30));
+
+        var ct = timeout.Token;
+
+        using var session =
+            await database.Client.StartSessionAsync(
+                cancellationToken: ct);
+
+        session.StartTransaction(
+            new TransactionOptions(
+                readConcern: ReadConcern.Snapshot,
+                readPreference: ReadPreference.Primary,
+                writeConcern: WriteConcern.WMajority));
+
+        AccountDeletionJob? second = null;
+
+        try
+        {
+            // Worker anterior obtiene un snapshot vigente.
+            var snapshot = await jobs.Find(
+                    session,
+                    x => x.Id == first.Id)
+                .SingleAsync(ct);
+
+            Assert.Equal(
+                first.LeaseVersion,
+                snapshot.LeaseVersion);
+
+            // Simular el vencimiento mientras la transaccion
+            // anterior permanece abierta.
+            await jobs.UpdateOneAsync(
+                x => x.Id == first.Id,
+                Builders<AccountDeletionJob>.Update.Set(
+                    x => x.LeaseExpiresAtUtc,
+                    DateTime.UtcNow.AddMinutes(-1)),
+                cancellationToken: ct);
+
+            // Un segundo worker reclama el trabajo.
+            second = await repository.TryClaimNextAsync(
+                "worker-new",
+                TimeSpan.FromMinutes(2),
+                ct);
+
+            Assert.NotNull(second);
+
+            Assert.True(
+                second.LeaseVersion > first.LeaseVersion);
+
+            // El worker anterior intenta modificar la cuenta
+            // dentro de su transaccion obsoleta.
+            var removed = await users.DeleteOneAsync(
+                session,
+                Builders<User>.Filter.Eq(
+                    x => x.Id, target.Id),
+                cancellationToken: ct);
+
+            Assert.Equal(1L, removed.DeletedCount);
+
+            // Intentar confirmar el checkpoint con el fence
+            // anterior debe generar conflicto de escritura.
+            var failure = await Assert.ThrowsAnyAsync<MongoException>(
+                async () =>
+                {
+                    await jobs.UpdateOneAsync(
+                        session,
+                        Builders<AccountDeletionJob>.Filter.And(
+                            Builders<AccountDeletionJob>.Filter.Eq(
+                                x => x.Id, first.Id),
+                            Builders<AccountDeletionJob>.Filter.Eq(
+                                x => x.LeaseOwner, "worker-old"),
+                            Builders<AccountDeletionJob>.Filter.Eq(
+                                x => x.LeaseVersion,
+                                first.LeaseVersion)),
+                        Builders<AccountDeletionJob>.Update.Set(
+                            x => x.Checkpoint,
+                            AccountDeletionCheckpoints.AccountRemoved),
+                        cancellationToken: ct);
+                });
+
+            Assert.True(
+                failure.HasErrorLabel(
+                    "TransientTransactionError") ||
+                failure is MongoCommandException
+                {
+                    Code: 112
+                });
+
+        }
+        finally
+        {
+            if (session.IsInTransaction)
+            {
+                await session.AbortTransactionAsync(
+                    CancellationToken.None);
+            }
+        }
+
+        // La eliminacion no confirmada debe revertirse.
+        var preserved = await users
+            .Find(x => x.Id == target.Id)
+            .SingleAsync(ct);
+
+        Assert.Equal("deleting", preserved.Status);
+
+        var persistedJob = await jobs
+            .Find(x => x.Id == first.Id)
+            .SingleAsync(ct);
+
+        Assert.NotNull(second);
+
+        Assert.Equal(
+            second.LeaseVersion,
+            persistedJob.LeaseVersion);
+
+        Assert.Equal(
+            "worker-new",
+            persistedJob.LeaseOwner);
+
+        Assert.Equal(
+            AccountDeletionCheckpoints.AccountClaimed,
+            persistedJob.Checkpoint);
+
+        Assert.False(
+            await repository.TryDeleteClaimedAccountAsync(
+                first.Id,
+                "worker-old",
+                first.LeaseVersion,
+                ct));
+
+        // Solo el propietario vigente puede completar.
+        await ExecuteJobAsync(
+            repository,
+            second,
+            "worker-new");
+
+        Assert.Null(await users
+            .Find(x => x.Id == target.Id)
+            .FirstOrDefaultAsync(ct));
+    }
+
+    [Fact]
+    public async Task TransactionCapability_ReplicaSetIsSupported()
+    {
+        var database = CreateDatabase();
+        var repository = await RepositoryAsync(database);
+
+        await repository.EnsureTransactionCapabilityAsync();
+    }
+
+    [Fact]
+    public async Task CorruptedClaimedJob_CannotDeleteDifferentIdentity()
+    {
+        var database = CreateDatabase();
+        var repository = await RepositoryAsync(database);
+
+        var target = await SeedAsync(database);
+
+        await repository.DiscoverDueAccountsAsync(20);
+
+        var job = await repository.TryClaimNextAsync(
+            "worker-a", TimeSpan.FromMinutes(2));
+
+        Assert.NotNull(job);
+
+        Assert.True(
+            await repository.TryBeginAccountDeletionAsync(
+                job.Id,
+                "worker-a",
+                job.LeaseVersion));
+
+        var jobs = database.GetCollection<AccountDeletionJob>(
+            "account_deletion_jobs");
+
+        // Simular corrupcion de la identidad persistida.
+        await jobs.UpdateOneAsync(
+            x => x.Id == job.Id,
+            Builders<AccountDeletionJob>.Update.Set(
+                x => x.RequestedAtUtc,
+                job.RequestedAtUtc.AddSeconds(1)));
+
+        Assert.False(
+            await repository.TryDeleteClaimedAccountAsync(
+                job.Id,
+                "worker-a",
+                job.LeaseVersion));
+
+        var users = new MongoUserRepository(database);
+
+        Assert.NotNull(
+            await users.GetByIdAsync(target.Id));
+
+        var blocked = await jobs
+            .Find(x => x.Id == job.Id)
+            .SingleAsync();
+
+        Assert.Equal(
+            AccountDeletionJobStates.Blocked,
+            blocked.Status);
+
+        Assert.Equal(
+            "invalid_job_identity",
+            blocked.LastErrorCode);
     }
 
     [Fact]

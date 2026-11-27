@@ -100,6 +100,54 @@ public sealed class MongoAccountDeletionExecutionRepository
             .ToUniversalTime();
     }
 
+    public async Task EnsureTransactionCapabilityAsync(
+        CancellationToken cancellationToken = default)
+    {
+        using var timeout =
+            CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken);
+
+        timeout.CancelAfter(TimeSpan.FromSeconds(10));
+
+        var ct = timeout.Token;
+
+        var hello = await _database.RunCommandAsync<BsonDocument>(
+            new BsonDocument("hello", 1),
+            readPreference: ReadPreference.Primary,
+            cancellationToken: ct);
+
+        if (!hello.GetValue(
+                "isWritablePrimary", false).ToBoolean() ||
+            !hello.Contains("setName") ||
+            hello.GetValue(
+                "logicalSessionTimeoutMinutes",
+                BsonNull.Value).IsBsonNull ||
+            hello.GetValue("maxWireVersion", 0).ToInt32() < 7)
+        {
+            throw new InvalidOperationException(
+                "Deletion execution requires transaction-capable MongoDB.");
+        }
+
+        using var session =
+            await _database.Client.StartSessionAsync(
+                cancellationToken: ct);
+
+        session.StartTransaction(
+            new TransactionOptions(
+                readConcern: ReadConcern.Snapshot,
+                readPreference: ReadPreference.Primary,
+                writeConcern: WriteConcern.WMajority));
+
+        // Solo lectura. No modifica datos del titular.
+        await _jobs.Find(
+                session,
+                Builders<AccountDeletionJob>.Filter.Empty)
+            .Limit(1)
+            .FirstOrDefaultAsync(ct);
+
+        await session.CommitTransactionAsync(ct);
+    }
+
     public async Task EnsureIndexesAsync(
         CancellationToken ct = default)
     {
@@ -347,6 +395,91 @@ public sealed class MongoAccountDeletionExecutionRepository
                 "$gt"));
     }
 
+    public async Task<bool> TryRenewLeaseAsync(
+        string jobId,
+        string workerId,
+        long leaseVersion,
+        TimeSpan leaseDuration,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(jobId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(workerId);
+
+        if (leaseVersion < 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(leaseVersion));
+        }
+
+        if (leaseDuration < TimeSpan.FromSeconds(1) ||
+            leaseDuration > TimeSpan.FromHours(1))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(leaseDuration));
+        }
+
+        var lease = Lease(jobId, workerId, leaseVersion);
+
+        var expirationField = Field<AccountDeletionJob>(
+            nameof(AccountDeletionJob.LeaseExpiresAtUtc));
+
+        var updatedField = Field<AccountDeletionJob>(
+            nameof(AccountDeletionJob.UpdatedAtUtc));
+
+        var newExpiration = new BsonDocument(
+            "$dateAdd",
+            new BsonDocument
+            {
+                { "startDate", "$$NOW" },
+                { "unit", "millisecond" },
+                {
+                    "amount",
+                    (long)leaseDuration.TotalMilliseconds
+                }
+            });
+
+        // La renovacion nunca debe acortar un lease existente.
+        var stage = new BsonDocument(
+            "$set",
+            new BsonDocument
+            {
+                {
+                    expirationField,
+                    new BsonDocument(
+                        "$max",
+                        new BsonArray
+                        {
+                            "$" + expirationField,
+                            newExpiration
+                        })
+                },
+                { updatedField, "$$NOW" }
+            });
+
+        PipelineDefinition<AccountDeletionJob,
+            AccountDeletionJob> pipeline =
+                new[] { stage };
+
+        var result = await _jobs.UpdateOneAsync(
+            lease,
+            JU.Pipeline(pipeline),
+            cancellationToken: cancellationToken);
+
+        return result.MatchedCount == 1;
+    }
+
+    private static bool HasValidJobIdentity(
+        AccountDeletionJob job)
+    {
+        return ObjectId.TryParse(job.UserId, out _) &&
+            job.ExpectedSessionVersion >= 1 &&
+            job.DeleteAfterUtc - job.RequestedAtUtc
+                == TimeSpan.FromDays(7) &&
+            job.Id == job.UserId + ":" +
+                job.ExpectedSessionVersion.ToString(
+                    CultureInfo.InvariantCulture);
+    }
+
     private static FilterDefinition<User> TargetAccount(
         AccountDeletionJob job,
         string status)
@@ -452,6 +585,17 @@ public sealed class MongoAccountDeletionExecutionRepository
                 return false;
             }
 
+            if (!HasValidJobIdentity(job))
+            {
+                return await StopJobAsync(
+                    session,
+                    lease,
+                    job,
+                    AccountDeletionJobStates.Blocked,
+                    "invalid_job_identity",
+                    ct);
+            }
+
             if (job.Checkpoint ==
                     AccountDeletionCheckpoints.AccountClaimed ||
                 job.Checkpoint ==
@@ -466,22 +610,6 @@ public sealed class MongoAccountDeletionExecutionRepository
                 return false;
             }
 
-            if (!ObjectId.TryParse(job.UserId, out _) ||
-                job.ExpectedSessionVersion < 1 ||
-                job.DeleteAfterUtc - job.RequestedAtUtc
-                    != TimeSpan.FromDays(7) ||
-                job.Id != job.UserId + ":" +
-                    job.ExpectedSessionVersion.ToString(
-                        CultureInfo.InvariantCulture))
-            {
-                return await StopJobAsync(
-                    session,
-                    lease,
-                    job,
-                    AccountDeletionJobStates.Blocked,
-                    "invalid_job_identity",
-                    ct);
-            }
 
             var result = await _users.UpdateOneAsync(
                 session,
@@ -549,6 +677,17 @@ public sealed class MongoAccountDeletionExecutionRepository
                 return false;
             }
 
+            if (!HasValidJobIdentity(job))
+            {
+                return await StopJobAsync(
+                    session,
+                    lease,
+                    job,
+                    AccountDeletionJobStates.Blocked,
+                    "invalid_job_identity",
+                    ct);
+            }
+
             if (job.Checkpoint ==
                 AccountDeletionCheckpoints.AccountRemoved)
             {
@@ -611,6 +750,17 @@ public sealed class MongoAccountDeletionExecutionRepository
                     AccountDeletionCheckpoints.AccountRemoved)
             {
                 return false;
+            }
+
+            if (!HasValidJobIdentity(job))
+            {
+                return await StopJobAsync(
+                    session,
+                    lease,
+                    job,
+                    AccountDeletionJobStates.Blocked,
+                    "invalid_job_identity",
+                    ct);
             }
 
             var existing = await _users.Find(

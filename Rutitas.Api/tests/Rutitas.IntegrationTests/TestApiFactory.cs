@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Rutitas.Application.Interfaces;
 using Rutitas.Domain.Entities;
+using Rutitas.Api.Services;
 
 namespace Rutitas.IntegrationTests;
 
@@ -13,6 +14,7 @@ namespace Rutitas.IntegrationTests;
 public sealed class TestApiFactory : WebApplicationFactory<Program>
 {
     public FakeUsers Users { get; } = new();
+    public FakeDeletionAdmission Admission { get; } = new();
     public FakeRevocations Revocations { get; } = new();
     public FakeRoutes Routes { get; } = new();
     public FakeAccountDeletions Deletions { get; } = new();
@@ -34,6 +36,8 @@ public sealed class TestApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IUserRepository>();services.AddSingleton<IUserRepository>(Users);
             services.RemoveAll<ITokenRevocationRepository>();services.AddSingleton<ITokenRevocationRepository>(Revocations);
             services.RemoveAll<IRouteRepository>();services.AddSingleton<IRouteRepository>(Routes);
+            services.RemoveAll<IAccountDeletionAdmission>();
+            services.AddSingleton<IAccountDeletionAdmission>(Admission);
             services.RemoveAll<IAccountDeletionRepository>();
             services.AddSingleton<IAccountDeletionRepository>(Deletions);
             services.RemoveAll<IRecoveryTokenRepository>();
@@ -292,4 +296,10 @@ public sealed class FakeRecoveryTokens : IRecoveryTokenRepository
             return user;
         }
     }
+}
+public sealed class FakeDeletionAdmission
+    : IAccountDeletionAdmission
+{
+    // Exclusivamente para repositorios sinteticos.
+    public bool CanSchedule { get; set; } = true;
 }
