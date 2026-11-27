@@ -1,4 +1,4 @@
-﻿
+
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Rutitas.Application.Exceptions;
@@ -78,29 +78,6 @@ public class MongoUserRepository : IUserRepository
         }
     }
 
-    // ========================================
-    // 4. ACTUALIZAR USUARIO COMPLETO
-    // Uso interno controlado
-    // ========================================
-
-    public async Task UpdateAsync(
-        User user,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(user);
-        if (!ObjectId.TryParse(user.Id, out _))
-        {
-            throw new ArgumentException(
-                "Invalid user ID.", nameof(user));
-        }
-
-        user.UpdatedAt = DateTime.UtcNow;
-
-        await _users.ReplaceOneAsync(
-            x => x.Id == user.Id,
-            user,
-            cancellationToken: cancellationToken);
-    }
 
     // ========================================
     // 5. ACTUALIZAR PERFIL PARCIALMENTE

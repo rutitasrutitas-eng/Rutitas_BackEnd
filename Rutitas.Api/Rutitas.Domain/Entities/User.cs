@@ -1,4 +1,4 @@
-﻿
+
 namespace Rutitas.Domain.Entities;
 
 public class User
@@ -17,6 +17,19 @@ public class User
 
     public string Status { get; set; } = "active";
 
+    // Version actual de las sesiones del usuario.
+    // Incrementar atomicamente al solicitar o cancelar
+    // la eliminacion.
+    public long SessionVersion { get; set; } = 1;
+
+    // Fechas UTC de la eliminacion programada.
+    public DateTime? DeletionRequestedAtUtc { get; set; }
+
+    public DateTime? DeleteAfterUtc { get; set; }
+
+
+    public string? RecoveryTokenHash { get; set; }
+    public DateTime? RecoveryTokenExpiresAtUtc { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

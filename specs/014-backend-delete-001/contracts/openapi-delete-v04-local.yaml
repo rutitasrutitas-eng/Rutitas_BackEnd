@@ -1,0 +1,473 @@
+openapi: 3.1.0
+info:
+  title: Rutitas — BACKEND-DELETE-001 / ANDROID-DELETE-001
+  version: 0.4.0-local-implementation
+  description: Contrato BACKEND-DELETE-001 / ANDROID-DELETE-001. Android otorgo conformidad tecnica definitiva sobre
+    v0.3. Coordinacion autorizo implementacion y pruebas exclusivamente locales el 2026-11-18. No autoriza commits,
+    push, PR, merge, despliegues, infraestructura ni datos reales. Respaldos, datos compartidos y excepciones legales
+    requieren ratificacion antes de publicar.
+servers:
+- url: http://10.0.2.2:8080/api/v1
+  description: Emulador Android hacia API local; solo pruebas autorizadas en dispositivo emulado.
+tags:
+- name: AccountDeletion
+  description: Eliminación programada, reautenticación limitada y cancelación.
+paths:
+  /users/me:
+    delete:
+      tags:
+      - AccountDeletion
+      operationId: scheduleMyAccountDeletion
+      summary: Solicitar eliminación programada
+      description: 'Requiere JWT ordinario de cuenta active. En una transición atómica cambia a pending_deletion,
+        incrementa sessionVersion y fija deleteAfterUtc exactamente siete días después de requestedAtUtc. El acceso
+        normal queda bloqueado inmediatamente. Si una solicitud concurrente llega mientras la cuenta sigue active,
+        no debe extender el plazo ya fijado. Un reintento posterior con JWT normal ya invalidado puede recibir 401:
+        la persistencia idempotente NO implica repetir necesariamente la respuesta 202. La UX podrá iniciar recuperación
+        para consultar el estado. Si se pierde HTTP 202, Android NO confirma éxito ni reenvía automáticamente como
+        si conservara una sesión válida: reautentica mediante el flujo de recuperación y consulta estado. Si no
+        se confirma, presenta resultado indeterminado. No se modifica el vencimiento original por repetición o concurrencia.
+        El login ordinario no puede emitir JWT para cuentas cuyo estado no sea active. Si se pierde la respuesta
+        202, Android no confirma resultado; intenta reautenticación restringida para consultar estado. Si la cuenta
+        permanece active puede verificarlo mediante nuevo login normal. Un fallo de login por sí solo no demuestra
+        que se haya solicitado la eliminación.'
+      security:
+      - ordinaryBearer: []
+      responses:
+        '202':
+          description: Eliminación programada registrada con éxito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionStatus'
+              example:
+                status: pending_deletion
+                requestedAtUtc: '2026-11-18T15:00:00Z'
+                deleteAfterUtc: '2026-11-25T15:00:00Z'
+                recoveryAllowed: true
+          headers:
+            Cache-Control:
+              description: No almacenar respuestas con estado de cuenta.
+              schema:
+                type: string
+                example: no-store
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+      x-open-decisions:
+      - migracion_sessionVersion
+      - idempotencia_http_y_reintentos
+  /users/me/deletion:
+    get:
+      tags:
+      - AccountDeletion
+      operationId: getMyAccountDeletionStatus
+      summary: Consultar estado de eliminación pendiente
+      description: Acceso exclusivamente mediante la credencial restringida de recuperación para una cuenta pending_deletion.
+        No habilita el JWT ordinario suspendido. La API no expone datos del perfil. Si el proceso irreversible ya
+        comenzó, no ofrece recuperación. Definir retención mínima y respuesta tras borrado definitivo en revisión
+        de privacidad. Con credencial restringida vigente y ligada al titular, si ahora >= deleteAfterUtc y la eliminación
+        aún no fue reclamada, devuelve 200 con status=pending_deletion y recoveryAllowed=false. Si ya existe estado
+        deleting corresponde 410 para el titular acreditado. Token vencido o invalidado implica 401, incluso si la
+        cuenta fue borrada; no revelar existencia a terceros. La credencial de recuperación debe estar vigente y
+        no consumida. La solicitud vencida aún en pending_deletion puede devolver 200 con recoveryAllowed=false
+        si ya había credencial vigente emitida antes de vencer; a partir del vencimiento no se emiten credenciales
+        nuevas. Si el estado ya es deleting, responder 410 con identidad acreditada.
+      security:
+      - recoveryBearer: []
+      responses:
+        '200':
+          description: Estado pendiente; recoveryAllowed es false desde el instante exacto del vencimiento.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionStatus'
+              examples:
+                antesDeVencer:
+                  summary: Todavía recuperable
+                  value:
+                    status: pending_deletion
+                    requestedAtUtc: '2026-11-18T15:00:00Z'
+                    deleteAfterUtc: '2026-11-25T15:00:00Z'
+                    recoveryAllowed: true
+                vencidoSinProcesar:
+                  summary: Vencido, procesamiento aún no iniciado
+                  value:
+                    status: pending_deletion
+                    requestedAtUtc: '2026-11-18T15:00:00Z'
+                    deleteAfterUtc: '2026-11-25T15:00:00Z'
+                    recoveryAllowed: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /auth/deletion/recovery:
+    post:
+      tags:
+      - AccountDeletion
+      operationId: authenticateForDeletionRecovery
+      summary: Reautenticación restringida para cuenta pendiente de eliminación
+      description: Verifica credenciales sin exigir un JWT ordinario activo. Solo cuentas pending_deletion antes
+        del vencimiento podrán obtener una credencial opaca de un solo uso por cancelación, de vida corta (300 s aprobados) y con permisos deletion:read y deletion:cancel. Consultar el estado NO consume la credencial;
+        una cancelación exitosa sí. Debe almacenarse solo su hash y protegerse con rate limiting. Credenciales incorrectas,
+        cuenta inexistente o no elegible no deben facilitar enumeración de usuarios. El uso concreto de 410 en este
+        endpoint requiere revisión de privacidad para evitar enumeración; por defecto devolver 401 genérico ante
+        falta de elegibilidad. No se emite token de recuperación si nowUtc >= deleteAfterUtc. El token opaco se
+        genera con aleatoriedad criptográfica, se guarda solo su hash, se asocia al titular y propósito, y se compara
+        de forma segura. La vigencia de 300 segundos esta aprobada por coordinacion. No permitir caching, no escribir token
+        ni contraseña en logs y no distinguir cuentas inexistentes o no elegibles mediante respuestas públicas.
+        Si la credencial de recuperación expiró o se invalidó, el titular puede volver a autenticarse con contraseña
+        para obtener una nueva credencial restringida solo mientras nowUtc < deleteAfterUtc y status=pending_deletion.
+        La nueva emisión no modifica requestedAtUtc ni deleteAfterUtc. La anterior permanece inválida. Se aplican
+        límites de intentos y respuestas genéricas indistinguibles para cuentas inexistentes o no elegibles. El
+        login ORDINARIO solo emite JWT a cuentas active; nunca para pending_deletion.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoveryAuthenticationRequest'
+            example:
+              email: estudiante.ficticio@example.test
+              password: <credencial-ficticia-no-real>
+      responses:
+        '200':
+          description: Credencial de recuperación emitida.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+            Pragma:
+              description: Compatibilidad ant caché
+              schema:
+                type: string
+                example: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecoveryAuthenticationResponse'
+              example:
+                recoveryToken: <valor-opaco-omitido>
+                tokenType: Bearer
+                expiresIn: 300
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+      x-open-decisions:
+      - retencion_token_hash
+      - politica_enumeracion
+  /users/me/deletion/cancel:
+    post:
+      tags:
+      - AccountDeletion
+      operationId: cancelMyAccountDeletion
+      summary: Cancelar eliminación durante el plazo de recuperación
+      description: 'Solo con credencial de recuperación válida, no consumida y ligada al titular. La condición atómica
+        exige status=pending_deletion, nowUtc < deleteAfterUtc y borrado irreversible no iniciado. Restaura active
+        e incrementa sessionVersion. La credencial se consume atómicamente o mediante mecanismo que resista reintentos
+        y concurrencia; ninguna sesión antigua vuelve a ser válida. El usuario debe realizar nuevo login normal.
+        Una interrupción de MongoDB nunca debe confirmarse como cancelación exitosa. Si se pierde la respuesta HTTP
+        200 y la credencial ya fue consumida, Android solicita un login ordinario NUEVO: solo una respuesta exitosa
+        con cuenta active confirma la cancelación. Un login fallido NO demuestra que la eliminación continúa pendiente;
+        mostrar estado indeterminado y no reintentar cancelación con token consumido. 503 significa resultado no
+        confirmado, no que no existan efectos. Criterio de errores confirmado: 409 para conflicto concurrente que
+        impide confirmar una transición antes de resolver el estado; 410 para titular acreditado cuando nowUtc >=
+        deleteAfterUtc o ya empezó deleting y la recuperación es irreversible. No se emite un 200 si la actualización
+        atómica no fue confirmada. Si se pierde 200 y ya se consumió la credencial, un nuevo login ordinario exitoso
+        con cuenta active verifica recuperación; un login fallido no prueba que siga pendiente.'
+      security:
+      - recoveryBearer: []
+      responses:
+        '200':
+          description: Cancelación confirmada; cuenta activa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionCancellationResponse'
+              example:
+                status: active
+                deletionCancelled: true
+                requiresLogin: true
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+      x-open-decisions:
+      - confirmacion_perdida_y_reautenticacion
+      - atomicidad_consume_token_y_cuenta
+components:
+  securitySchemes:
+    ordinaryBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT ordinario con sessionVersion obligatorio. Rechazar JWT antiguos sin este claim. Requiere
+        cuenta active y version vigente. No admite credenciales de recuperacion.
+    recoveryBearer:
+      type: http
+      scheme: bearer
+      description: Credencial opaca criptograficamente segura, almacenada solo como hash, con vigencia de 300 segundos
+        y uso restringido a consulta de estado y cancelacion de eliminacion. Se consume al cancelar. Validacion
+        separada del JWT ordinario.
+  schemas:
+    DeletionStatus:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - requestedAtUtc
+      - deleteAfterUtc
+      - recoveryAllowed
+      properties:
+        status:
+          type: string
+          enum:
+          - pending_deletion
+          - deleting
+        requestedAtUtc:
+          type: string
+          format: date-time
+          description: Instante UTC de la primera solicitud válida.
+        deleteAfterUtc:
+          type: string
+          format: date-time
+          description: requestedAtUtc más exactamente siete días.
+        recoveryAllowed:
+          type: boolean
+          description: 'True únicamente antes de vencer y antes de iniciar borrado irreversible. Si nowUtc >= deleteAfterUtc:
+            false incluso antes de que el worker reclame el trabajo.'
+    RecoveryAuthenticationRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          format: password
+          minLength: 1
+          maxLength: 128
+    RecoveryAuthenticationResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - recoveryToken
+      - tokenType
+      - expiresIn
+      properties:
+        recoveryToken:
+          type: string
+          minLength: 1
+          description: Secreto temporal, nunca registrar en logs.
+        tokenType:
+          type: string
+          const: Bearer
+        expiresIn:
+          type: integer
+          minimum: 1
+          description: 'Duracion aprobada por coordinacion: 300 segundos.'
+          const: 300
+    DeletionCancellationResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - deletionCancelled
+      - requiresLogin
+      properties:
+        status:
+          type: string
+          const: active
+        deletionCancelled:
+          type: boolean
+          const: true
+        requiresLogin:
+          type: boolean
+          const: true
+    ProblemDetails:
+      type: object
+      description: Cuerpo compatible con ProblemDetails; nunca filtrar datos privados ni secretos.
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        traceId:
+          type: string
+  responses:
+    BadRequest:
+      description: Solicitud inválida.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            title: Invalid request.
+            status: 400
+    Unauthorized:
+      description: Credencial ausente, inválida, vencida o identidad no elegible.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            title: Authentication required.
+            status: 401
+    Forbidden:
+      description: Credencial válida pero sin el permiso requerido.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            title: Action not permitted.
+            status: 403
+    Conflict:
+      description: Conflicto de estado o concurrencia cuyo resultado necesita verificarse; no se emplea 409 para
+        comunicar vencimiento definitivo, que corresponde a 410 cuando la identidad está acreditada.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            title: Account state conflict.
+            status: 409
+    Gone:
+      description: 'Recuperación no disponible para titular previamente acreditado: vencimiento exacto del plazo
+        o transición a deleting; la reautenticación pública usa errores genéricos para evitar enumeración.'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            title: Account recovery is no longer available.
+            status: 410
+    TooManyRequests:
+      description: Límite de intentos excedido.
+      headers:
+        Retry-After:
+          schema:
+            type: string
+            pattern: ^[0-9]+$
+            example: '60'
+          description: Valor obligatorio en segundos enteros no negativos (delta-seconds), no HTTP-date, confirmado en el contrato
+            Android.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            title: Too many requests.
+            status: 429
+    Unavailable:
+      description: Dependencia fallida; resultado posiblemente indeterminado. El cliente no debe inferir éxito ni
+        fracaso irreversible.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            title: Service temporarily unavailable.
+            status: 503
+x-approval-status:
+  android: conformidad_tecnica_definitiva_v03
+  coordination: implementacion_y_pruebas_locales_autorizadas
+  authorizationDate: '2026-11-18'
+  implementationStatus: autorizada_no_verificada
+  deploymentAuthorized: false
+  commitsAuthorized: false
+  additionalCostMXN: 0
+  syntheticDataOnly: true
+  approvedDecisions:
+    recoveryCredentialLifetimeSeconds: 300
+    rejectLegacyJwtWithoutSessionVersion: true
+    reloginRequiredForLegacyJwt: true
+    deletionPeriodDays: 7
+    atomicTransitionsRequired: true
+    verifiedResultsRequired: true
+  pendingRatification:
+  - retencion_y_tratamiento_de_respaldos
+  - relaciones_y_datos_compartidos
+  - excepciones_legales
+  - autorizacion_de_publicacion
+x-test-cases-proposed:
+- 'DEL-V23: login normal bloqueado en pending_deletion y deleting'
+- 'DEL-V24: 200 cancelacion perdido -> login nuevo active verifica, fallo no concluyente'
+- 'DEL-V25: reautenticacion restringida tras caducar token antes del plazo sin extenderlo'
+- 'DEL-V26: token expirado no se reutiliza, no emitir token nuevo al vencer'
+- 'DEL-V27: 409 conflicto transitorio frente a 410 vencimiento o deleting'
+- 'DEL-V28: GET estado vencido no reclamado -> 200 recoveryAllowed=false con token previo vigente'
+
+x-local-verification:
+  reviewDate: '2026-11-19'
+  scope: local_synthetic_backend_only
+  backend:
+    unitTestsPassed: 38
+    securityTestsPassed: 26
+    contractTestsPassed: 9
+    architectureTestsPassed: 2
+    integrationTestsPassed: 59
+    totalPassed: 134
+    result: passed_in_latest_successful_runs
+    mongoIntermittency: observed_cause_unconfirmed
+    http503Coverage: partial
+  openapi:
+    version: 3.1.0
+    structuralValidation: passed
+  android:
+    designConformity: confirmed_for_v04
+    unitTestsPassed: 8
+    visualChecksPassed: 10
+    internalTestApk: compiled
+    integrationScenarios: 28
+    integrationStatus: NOT_RUN
+    sensitiveActionsEnabled: false
+  permissions:
+    integrationAuthorized: false
+    deploymentAuthorized: false
+    remoteChangesAuthorized: false
+  documentaryClarification:
+    date: '2026-11-19'
+    backendLocalAuthorization: authorized_on_2026-11-18
+    backendLocalVerification: 134_pass_five_trx
+    historicalImplementationStatus: retained_as_original_approval_record
+    androidDesignConformity: confirmed_for_openapi_v04
+    androidBackendIntegrationAuthorization: not_authorized
+    androidIntegrationScenarios: 28_NOT_RUN
+    publicationAuthorization: pending

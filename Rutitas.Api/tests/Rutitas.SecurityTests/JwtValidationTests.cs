@@ -80,7 +80,8 @@ public sealed class JwtValidationTests
         var validControlToken = SignedToken(configuration,
         [
             new Claim(JwtRegisteredClaimNames.Sub, userId),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+            new Claim("sessionVersion", "1")
         ]);
 
         client.DefaultRequestHeaders.Authorization =
@@ -106,6 +107,77 @@ public sealed class JwtValidationTests
             new AuthenticationHeaderValue("Bearer", tokenWithoutSubject);
         Assert.Equal(HttpStatusCode.Unauthorized,
             (await client.GetAsync(new Uri("/api/v1/routes", UriKind.Relative))).StatusCode);
+    }
+
+    [Fact]
+    public async Task JwtWithoutSessionVersion_IsRejected()
+    {
+        using var app = new TestApiFactory();
+        using var client = app.CreateClient();
+
+        var (_, userId) = await RegisterAndLogin(client);
+        var configuration =
+            app.Services.GetRequiredService<IConfiguration>();
+
+        var legacyToken = SignedToken(configuration,
+        [
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
+            new Claim(
+                JwtRegisteredClaimNames.Jti,
+                Guid.NewGuid().ToString("N"))
+        ]);
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", legacyToken);
+
+        var response = await client.GetAsync("/api/v1/routes");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task OldSessionVersion_RemainsInvalidAfterVersionChange()
+    {
+        using var app = new TestApiFactory();
+        using var client = app.CreateClient();
+
+        var (oldToken, _) = await RegisterAndLogin(client);
+
+        var user = await app.Users.GetByEmailAsync(Email);
+        Assert.NotNull(user);
+
+        // Simula un incremento ya persistido de la version.
+        user.SessionVersion++;
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", oldToken);
+
+        var oldResponse = await client.GetAsync("/api/v1/routes");
+
+        Assert.Equal(
+            HttpStatusCode.Unauthorized,
+            oldResponse.StatusCode);
+
+        client.DefaultRequestHeaders.Authorization = null;
+
+        var login = await client.PostAsJsonAsync(
+            "/api/v1/auth/login",
+            new { email = Email, password = Password });
+
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+
+        using var body = JsonDocument.Parse(
+            await login.Content.ReadAsStringAsync());
+
+        var newToken = body.RootElement
+            .GetProperty("accessToken").GetString();
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", newToken);
+
+        var newResponse = await client.GetAsync("/api/v1/routes");
+
+        Assert.Equal(HttpStatusCode.OK, newResponse.StatusCode);
     }
 
     [Fact]
