@@ -1,0 +1,289 @@
+openapi: 3.1.0
+info:
+  title: Rutitas MAPS-001 API
+  version: 0.1.0-candidate
+  description: >
+    Contrato candidato de la capa geoespacial de Rutitas.
+    No implica integración real ni autorización de despliegue.
+servers:
+  - url: https://{host}/api/v1
+    variables:
+      host:
+        default: localhost:8080
+        description: Host de la API Rutitas autorizado para el entorno.
+tags:
+  - name: Maps
+    description: Búsqueda, geocodificación y cálculo de recorridos.
+security:
+  - bearerAuth: []
+paths:
+  /maps/search:
+    get:
+      tags: [Maps]
+      operationId: searchPlaces
+      summary: Buscar lugares y direcciones.
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string, minLength: 2, maxLength: 160 }
+        - in: query
+          name: limit
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 10, default: 5 }
+        - in: query
+          name: countryCode
+          required: false
+          schema: { type: string, pattern: '^[A-Z]{2}$', default: MX }
+        - in: query
+          name: latitude
+          required: false
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - in: query
+          name: longitude
+          required: false
+          schema: { type: number, minimum: -180, maximum: 180 }
+      responses:
+        '200':
+          description: Resultados normalizados.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Place' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '502': { $ref: '#/components/responses/ProviderError' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '504': { $ref: '#/components/responses/Timeout' }
+  /maps/geocode:
+    get:
+      tags: [Maps]
+      operationId: geocodeAddress
+      summary: Convertir una dirección en coordenadas.
+      parameters:
+        - in: query
+          name: address
+          required: true
+          schema: { type: string, minLength: 3, maxLength: 200 }
+        - in: query
+          name: countryCode
+          required: false
+          schema: { type: string, pattern: '^[A-Z]{2}$', default: MX }
+      responses:
+        '200':
+          description: Ubicación encontrada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Place' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '502': { $ref: '#/components/responses/ProviderError' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '504': { $ref: '#/components/responses/Timeout' }
+  /maps/reverse-geocode:
+    get:
+      tags: [Maps]
+      operationId: reverseGeocode
+      summary: Convertir coordenadas en una dirección aproximada.
+      parameters:
+        - in: query
+          name: latitude
+          required: true
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - in: query
+          name: longitude
+          required: true
+          schema: { type: number, minimum: -180, maximum: 180 }
+      responses:
+        '200':
+          description: Dirección aproximada encontrada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Place' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '502': { $ref: '#/components/responses/ProviderError' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '504': { $ref: '#/components/responses/Timeout' }
+  /maps/directions:
+    post:
+      tags: [Maps]
+      operationId: calculateDirections
+      summary: Calcular recorrido entre origen y destino.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DirectionsRequest' }
+      responses:
+        '200':
+          description: Recorrido calculado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DirectionsResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '502': { $ref: '#/components/responses/ProviderError' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '504': { $ref: '#/components/responses/Timeout' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Coordinate:
+      type: object
+      additionalProperties: false
+      required: [latitude, longitude]
+      properties:
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+    Place:
+      type: object
+      additionalProperties: false
+      required: [label, position]
+      properties:
+        providerId: { type: [string, 'null'] }
+        label: { type: string }
+        formattedAddress: { type: [string, 'null'] }
+        position: { $ref: '#/components/schemas/Coordinate' }
+        countryCode: { type: [string, 'null'], pattern: '^[A-Z]{2}$' }
+        resultType: { type: [string, 'null'] }
+    DirectionsRequest:
+      type: object
+      additionalProperties: false
+      required: [origin, destination, travelMode]
+      properties:
+        origin: { $ref: '#/components/schemas/Coordinate' }
+        destination: { $ref: '#/components/schemas/Coordinate' }
+        waypoints:
+          type: array
+          maxItems: 8
+          items: { $ref: '#/components/schemas/Coordinate' }
+        travelMode:
+          type: string
+          enum: [driving, walking]
+        departAt:
+          type: [string, 'null']
+          format: date-time
+    DirectionsResponse:
+      type: object
+      additionalProperties: false
+      required: [origin, destination, distanceMeters, durationSeconds, geometry, provider, calculatedAtUtc]
+      properties:
+        origin: { $ref: '#/components/schemas/Coordinate' }
+        destination: { $ref: '#/components/schemas/Coordinate' }
+        distanceMeters: { type: integer, minimum: 1 }
+        durationSeconds: { type: integer, minimum: 1 }
+        geometry:
+          type: object
+          description: Geometría GeoJSON LineString o MultiLineString.
+          oneOf:
+            - $ref: '#/components/schemas/LineString'
+            - $ref: '#/components/schemas/MultiLineString'
+        provider: { type: string, const: azure-maps }
+        calculatedAtUtc: { type: string, format: date-time }
+    LineString:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type: { type: string, const: LineString }
+        coordinates:
+          type: array
+          minItems: 2
+          items:
+            type: array
+            prefixItems:
+              - { type: number, minimum: -180, maximum: 180 }
+              - { type: number, minimum: -90, maximum: 90 }
+            minItems: 2
+            maxItems: 2
+    MultiLineString:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type: { type: string, const: MultiLineString }
+        coordinates:
+          type: array
+          items:
+            type: array
+            minItems: 2
+            items:
+              type: array
+              prefixItems:
+                - { type: number, minimum: -180, maximum: 180 }
+                - { type: number, minimum: -90, maximum: 90 }
+              minItems: 2
+              maxItems: 2
+    Problem:
+      type: object
+      description: RFC 9457 Problem Details.
+      properties:
+        type: { type: string, format: uri-reference }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string, format: uri-reference }
+        traceId: { type: string }
+  responses:
+    BadRequest:
+      description: Parámetros inválidos.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unauthorized:
+      description: JWT ausente o inválido.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: Usuario sin autorización.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Ubicación o recorrido no encontrado.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    TooManyRequests:
+      description: Límite de consumo alcanzado.
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ProviderError:
+      description: Respuesta inválida o error del proveedor.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unavailable:
+      description: Proveedor o identidad no disponible.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Timeout:
+      description: Tiempo de espera agotado.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
