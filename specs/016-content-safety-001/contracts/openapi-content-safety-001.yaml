@@ -1,0 +1,266 @@
+openapi: 3.1.0
+info:
+  title: Rutitas Content Safety API
+  version: 0.1.0-candidate
+  description: >
+    Contrato candidato. Sin implementacion funcional
+    ni autorizacion de consumo real de Azure.
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Moderation
+
+paths:
+  /moderation/text:
+    post:
+      tags: [Moderation]
+      operationId: moderateText
+      summary: Evaluar contenido textual
+      description: >
+        El propietario se obtiene del JWT.
+        La decision se vincula en servidor al contenido
+        exacto, contexto y version de politica.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextModerationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ModerationSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
+
+  /moderation/image:
+    post:
+      tags: [Moderation]
+      operationId: moderateImage
+      summary: Evaluar una imagen
+      description: >
+        Limite candidato de 4 MiB para la imagen.
+        Validar formato binario real, dimensiones
+        y contenido decodificado antes del proveedor.
+        No se aceptan URLs arbitrarias.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImageModerationRequest'
+            encoding:
+              image:
+                contentType: image/jpeg, image/png
+      responses:
+        '200':
+          $ref: '#/components/responses/ModerationSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    TextModerationRequest:
+      type: object
+      additionalProperties: false
+      required: [context, text]
+      properties:
+        context:
+          type: string
+          enum:
+            - profile_description
+            - vehicle_description
+            - review
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          pattern: '\S'
+
+    ImageModerationRequest:
+      type: object
+      additionalProperties: false
+      required: [context, image]
+      properties:
+        context:
+          type: string
+          enum:
+            - profile_photo
+            - vehicle_photo
+        image:
+          type: string
+          format: binary
+
+    ModerationDecision:
+      type: string
+      enum:
+        - approved
+        - rejected
+        - pending_review
+
+    ModerationResult:
+      type: object
+      additionalProperties: false
+      required:
+        - moderationId
+        - decision
+        - policyVersion
+        - evaluatedAtUtc
+      properties:
+        moderationId:
+          type: string
+          format: uuid
+          description: >
+            Identificador opaco generado por servidor.
+            No constituye por si mismo autorizacion
+            para publicar contenido.
+        decision:
+          $ref: '#/components/schemas/ModerationDecision'
+        policyVersion:
+          type: string
+          minLength: 1
+          maxLength: 64
+        evaluatedAtUtc:
+          type: string
+          format: date-time
+
+    ProblemDetails:
+      type: object
+      required: [title, status]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+      description: >
+        Error HTTP sin credenciales, contenido original,
+        datos personales ni detalles internos del proveedor.
+
+  responses:
+    ModerationSuccess:
+      description: Evaluacion completada, no equivale a publicacion.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ModerationResult'
+
+    BadRequest:
+      description: Entrada invalida.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    Unauthorized:
+      description: JWT ausente o invalido.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    Forbidden:
+      description: Operacion no autorizada.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    PayloadTooLarge:
+      description: Contenido demasiado grande.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    UnsupportedMedia:
+      description: Formato no permitido.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    RateLimited:
+      description: Limite de solicitudes alcanzado.
+      headers:
+        Retry-After:
+          description: Segundos antes de intentar nuevamente.
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    BadGateway:
+      description: Respuesta invalida del proveedor.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    Unavailable:
+      description: Proveedor indisponible o deshabilitado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    GatewayTimeout:
+      description: Tiempo de espera agotado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
